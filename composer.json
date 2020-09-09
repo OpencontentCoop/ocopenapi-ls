@@ -1,0 +1,21 @@
+{
+    "name": "opencontent/ocopenapi-ls",
+    "description": "OpenContent OpenApi extension",
+    "type": "ezpublish-legacy-extension",
+    "authors": [        
+        {
+            "name": "OpenContent",
+            "homepage": "http://www.opencontent.it"
+        }
+    ],
+    "license": "GPL-2.0",    
+    "minimum-stability": "dev",
+    "require": {
+        "ezsystems/ezpublish-legacy-installer": "*",
+        "erasys/openapi-php": "*",
+        "opencontent/ocopendata-ls": "*"
+    },
+    "extra": {
+        "ezpublish-legacy-extension-name": "ocopenapi"
+    }
+}
