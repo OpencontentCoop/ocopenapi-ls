@@ -182,10 +182,10 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
                                 'properties' => [
                                     \OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME => $this->generateSchemaProperty([
                                         'type' => 'string',
-                                        'title' => 'Content type (discriminator)'
+                                        'description' => 'Resource name'
                                     ])
                                 ],
-                                'required' => ['content_type']
+                                'required' => [\OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME]
                             ]);
                         }
                         foreach ($operationFactory->getSchemaFactories() as $schemaFactory) {
