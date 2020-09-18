@@ -46,7 +46,9 @@ class ContentClassSchemaSerializer
             foreach ($properties as $identifier => $values) {
                 $schema->properties[$identifier] = $this->generateSchemaProperty($values);
             }
-            $schema->required = $requiredFields;
+            if (count($requiredFields) > 0) {
+                $schema->required = $requiredFields;
+            }
 
             self::$schemas[$classIdentifier] = $schema;
         }

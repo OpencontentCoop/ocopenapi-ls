@@ -84,12 +84,14 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
                 "uri" => [
                     "title" => "$uriDescription",
                     "type" => "string",
-                    "required" => true
                 ],
                 "priority" => [
                     "title" => "Priority",
                     "type" => "integer",
                 ],
+            ],
+            "required" => [
+                "uri"
             ]
         ];
         if ($this->selectionType == self::MODE_LIST_DROP_DOWN) {

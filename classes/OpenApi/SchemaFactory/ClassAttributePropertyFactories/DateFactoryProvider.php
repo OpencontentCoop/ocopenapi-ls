@@ -13,7 +13,7 @@ class DateFactoryProvider extends ContentClassAttributePropertyFactory
 
         return array_merge_recursive($data, array(
             "format" => "date",
-            "default" => $default == \eZDateType::DEFAULT_CURRENT_DATE ? date('c') : null
+            "default" => $default == \eZDateType::DEFAULT_CURRENT_DATE ? date('o-m-d') : null
         ));
     }
 
