@@ -121,7 +121,7 @@ class NodeClassesEndpointFactory extends EndpointFactory
 
     protected function generateId()
     {
-        return 'NodeClasses::' . $this->getNodeId() . '::' . implode('-', $this->getClassIdentifierList());
+        return 'Node' . $this->getNodeId() . 'Classes' . implode('-', $this->getClassIdentifierList());
     }
 
     public function serialize()

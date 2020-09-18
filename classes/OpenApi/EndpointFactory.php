@@ -112,7 +112,7 @@ abstract class EndpointFactory implements \JsonSerializable, \Serializable
         $this->operationFactoryCollection = $operations
             ->setTags($this->getTags())
             ->setOperationsId(function (OperationFactory $operationFactory){
-                return $this->getId() . '#' . $operationFactory->getName();
+                return $operationFactory->getName() . $this->getId();
             })
             ->setSchemaFactories($this->provideSchemaFactories());
         return $this;

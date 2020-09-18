@@ -27,7 +27,7 @@ class MatrixEndpointFactory extends EndpointFactory implements ChildEndpointFact
 
     protected function generateId()
     {
-        return 'Matrix::' .  $this->getClassAttributeId();
+        return 'Matrix' .  $this->getClassAttributeId();
     }
 
     /**

@@ -80,7 +80,7 @@ class RelationsEndpointFactory extends EndpointFactory implements ChildEndpointF
 
     protected function generateId()
     {
-        return 'Relations::' . $this->getClassAttributeId();
+        return 'Relations' . $this->getClassAttributeId();
     }
 
     /**
