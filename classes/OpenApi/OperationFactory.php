@@ -185,14 +185,29 @@ abstract class OperationFactory implements \JsonSerializable, \Serializable
         $headers = [];
         if (\OpenApiRateLimit::instance()->isEnabled()) {
             $headers = [
-                'X-RateLimit-Limit' => new OA\Header('The maximum number of requests that the client is allowed to make in this window.'),
-                'X-RateLimit-Remaining' => new OA\Header('The number of requests allowed in the current window.'),
-                'X-RateLimit-Reset' => new OA\Header('The relative time in seconds when the rate limit window will be reset.'),
+                'X-RateLimit-Limit' => new OA\Header(
+                    'The maximum number of requests that the client is allowed to make in this window.',
+                    ['schema' => new OA\Schema(['type' => 'integer'])]
+                ),
+                'X-RateLimit-Remaining' => new OA\Header(
+                    'The number of requests allowed in the current window.',
+                    ['schema' => new OA\Schema(['type' => 'integer'])]
+                ),
+                'X-RateLimit-Reset' => new OA\Header(
+                    'The relative time in seconds when the rate limit window will be reset.',
+                    ['schema' => new OA\Schema(['type' => 'integer'])]
+                ),
             ];
         }
         if ($isError){
-            $headers['X-Api-Error-Type'] = new OA\Header('The error identifier.');
-            $headers['X-Api-Error-Message'] = new OA\Header('The error message.');
+            $headers['X-Api-Error-Type'] = new OA\Header(
+                'The error identifier.',
+                ['schema' => new OA\Schema(['type' => 'string'])]
+            );
+            $headers['X-Api-Error-Message'] = new OA\Header(
+                'The error message.',
+                ['schema' => new OA\Schema(['type' => 'string'])]
+            );
         }
 
         return count($headers) ? $headers : null;
