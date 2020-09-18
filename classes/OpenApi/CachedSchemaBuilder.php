@@ -2,7 +2,9 @@
 
 namespace Opencontent\OpenApi;
 
+use Opencontent\OpenApi\SchemaBuilder\InfoWithAdditionalProperties;
 use Opencontent\OpenApi\SchemaBuilder\Settings;
+use erasys\OpenApi\Spec\v3 as OA;
 
 class CachedSchemaBuilder implements SchemaBuilderInterface, CacheCleanable
 {
@@ -45,7 +47,30 @@ class CachedSchemaBuilder implements SchemaBuilderInterface, CacheCleanable
             null
         );
 
-        return json_decode($data, true);
+        $data = json_decode($data, true);
+
+        return new OA\Document(
+            new InfoWithAdditionalProperties(
+                $data['info']['title'],
+                $data['info']['version'],
+                $data['info']['description'],
+                [
+                    'termsOfService' => $data['info']['termsOfService'],
+                    'contact' => $data['info']['contact'],
+                    'license' => $data['info']['license'],
+                    'xApiId' => $data['info']['x-api-id'],
+                    'xAudience' => $data['info']['x-audience'],
+                ]
+            ),
+            $data['paths'],
+            $data['openapi'],
+            [
+                'servers' => $data['servers'],
+                'tags' => $data['tags'],
+                'components' => $data['components'],
+                'security' => $data['security'],
+            ]
+        );
     }
 
     /**

@@ -115,9 +115,9 @@ class OperationFactoryCollection implements \JsonSerializable
     {
         $tags = [];
         foreach ($this->operations as $operation){
-            $tags = $tags + $operation->getTags();
+            $tags = array_merge($tags, $operation->getTags());
         }
-        return $tags;
+        return array_unique($tags);
     }
 
     /**

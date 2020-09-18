@@ -13,5 +13,6 @@ class=\Opencontent\OpenApi\Loader
 
 [RoleSettings]
 PolicyOmitList[]=openapi.json
+PolicyOmitList[]=openapi.yml
 PolicyOmitList[]=openapi/doc
 */ ?>

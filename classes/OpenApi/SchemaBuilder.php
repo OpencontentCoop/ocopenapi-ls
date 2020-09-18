@@ -128,7 +128,7 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
         $tags = [];
 
         foreach ($this->getEndpointFactoryCollection() as $endpoint) {
-            $tags = array_unique(array_merge($tags, $endpoint->getTags()));
+            $tags = array_unique(array_merge($tags, $endpoint->getOperationFactoryCollection()->getTags()));
         }
 
         $oaTags = [];
