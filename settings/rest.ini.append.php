@@ -10,9 +10,7 @@ ApplicationCache=disabled
 SkipFilter[]=OpenApiController_endpoint
 
 [Authentication]
-RequireAuthentication=enabled
 AuthenticationStyle=OpenApiBasicAuthStyle
-DefaultUserID=
 
 
 */ ?>

@@ -13,7 +13,7 @@
 <script>
     window.onload = function () {ldelim}
         window.ui = SwaggerUIBundle({ldelim}
-            url: {"/openapi.json"|ezurl(yes,full)},
+            url: "{$endpoint_url}",
             dom_id: '#swagger-ui',
             docExpansion: "none",
             presets: [

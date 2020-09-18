@@ -1,6 +1,9 @@
 <?php
 
+use Opencontent\OpenApi\Loader;
+
 $tpl = eZTemplate::factory();
+$tpl->setVariable('endpoint_url', Loader::instance()->getSettingsProvider()->provideSettings()->endpointUrl . '/');
 if (isset($_GET['debug'])) {
     $tpl->setVariable('load_page', true);
     echo $tpl->fetch('design:openapi.tpl');

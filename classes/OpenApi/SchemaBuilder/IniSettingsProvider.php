@@ -9,7 +9,7 @@ class IniSettingsProvider implements SettingsProviderInterface
         $settings = new Settings();
 
         $termsUrl = '/openapi/terms';
-        \eZURI::transformURI($siteUrl,true, 'full');
+        \eZURI::transformURI($siteUrl, true, 'full');
         $settings->termsOfServiceUrl = $termsUrl;
 
         $endpointUrl = '/api/openapi';
@@ -18,8 +18,11 @@ class IniSettingsProvider implements SettingsProviderInterface
 
         $settings->apiTitle = \eZINI::instance()->variable('SiteSettings', 'SiteName') . ' Api';
         $settings->apiDescription = 'Web service to create and manage contents';
-        $settings->apiVersion = '1.0.0 alpha';
         $settings->apiId = \eZSolr::installationID();
+
+        $settings->debugEnabled = \eZINI::instance()->variable('DebugSettings', 'DebugOutput') == 'enabled';
+
+        $settings->cacheEnabled = true;
 
         return $settings;
     }

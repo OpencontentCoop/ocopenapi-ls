@@ -44,8 +44,8 @@ class OpenApiErrorResponse implements ezcMvcResultStatusObject
                 'error_type' => $this->errorType,
                 'error_message' => $this->message
             ];
-            if (Loader::instance()->getSettingsProvider()->provideSettings()->debug && $this->exception instanceof Exception) {
-                $body['error_ref'] = $this->exception->getFile() . '#' . $this->exception->getLine();
+            if (Loader::instance()->getSettingsProvider()->provideSettings()->debugEnabled && $this->exception instanceof Exception) {
+                $body['error_debug'] = $this->exception->getFile() . '#' . $this->exception->getLine();
             }
             $writer->response->body = json_encode($body);
         }

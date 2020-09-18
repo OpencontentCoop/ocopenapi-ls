@@ -18,7 +18,17 @@ class OpenApiRateLimit
     /**
      * @var int
      */
-    private $rateLimitPerInterval = 10000;
+    private $loggedInRateLimitPerInterval = 10000;
+
+    /**
+     * @var int
+     */
+    private $anonymousRateLimitPerInterval = 1000;
+
+    /**
+     * @var int
+     */
+    private $rateLimitPerInterval;
 
     /**
      * @var int
@@ -58,6 +68,18 @@ class OpenApiRateLimit
     }
 
     /**
+     * @return int
+     */
+    public function getRateLimitPerInterval()
+    {
+        if ($this->rateLimitPerInterval === null){
+            $this->rateLimitPerInterval = \eZUser::isCurrentUserRegistered() ? $this->loggedInRateLimitPerInterval : $this->anonymousRateLimitPerInterval;
+        }
+
+        return $this->rateLimitPerInterval;
+    }
+
+    /**
      * @param int $interval
      */
     public function setInterval($interval)
@@ -81,7 +103,7 @@ class OpenApiRateLimit
             if ($this->relativeNextReset <= 0) {
                 $this->reset();
             }
-            if ($this->requestCount >= $this->rateLimitPerInterval) {
+            if ($this->requestCount >= $this->getRateLimitPerInterval()) {
                 throw new TooManyRequestsException($this->relativeNextReset);
             }
             $this->requestCount++;
@@ -112,6 +134,7 @@ class OpenApiRateLimit
         $this->requestCount = 0;
         $this->lastReset = time();
         $this->setValue(self::RESET_TIMESTAMP_FIELD, $this->lastReset);
+        $this->relativeNextReset = $this->interval;
     }
 
     private function setValue($field, $value)
@@ -122,11 +145,11 @@ class OpenApiRateLimit
     public function setHeaders()
     {
         if ($this->isEnabled()) {
-            $remaining = $this->rateLimitPerInterval - $this->requestCount;
+            $remaining = $this->getRateLimitPerInterval() - $this->requestCount;
             if ($remaining < 0){
                 $remaining = 0;
             }
-            header("X-RateLimit-Limit: $this->rateLimitPerInterval");
+            header("X-RateLimit-Limit: " . $this->getRateLimitPerInterval());
             header("X-RateLimit-Remaining: $remaining");
             header("X-RateLimit-Reset: $this->relativeNextReset");
         }

@@ -58,6 +58,7 @@ class OpenApiController extends ezpRestMvcController
             $result = $operation->handleCurrentRequest($endpoint);
             $this->rateLimitHandler->setHeaders();
 
+            $this->setHeaders();
             return $result;
 
         } catch (Exception $e) {
@@ -65,6 +66,11 @@ class OpenApiController extends ezpRestMvcController
         }
 
         return $result;
+    }
+
+    private function setHeaders()
+    {
+        header("X-Api-User: " . eZUser::currentUserID());
     }
 
     private function doExceptionResult(Exception $exception)

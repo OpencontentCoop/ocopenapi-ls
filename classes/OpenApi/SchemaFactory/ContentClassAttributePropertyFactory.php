@@ -87,7 +87,7 @@ class ContentClassAttributePropertyFactory
             $payloadBuilder->setData(
                 $locale,
                 $this->attribute->attribute('identifier'),
-                is_scalar($value) ? (string)$value : $value
+                $value
             );
         }
     }

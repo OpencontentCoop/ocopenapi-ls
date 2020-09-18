@@ -19,5 +19,7 @@ class Settings
 
     public $endpointUrl;
 
-    public $debug = true;
+    public $cacheEnabled;
+
+    public $debugEnabled;
 }

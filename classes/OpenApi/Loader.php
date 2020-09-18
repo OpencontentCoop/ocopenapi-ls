@@ -9,12 +9,23 @@ use Opencontent\OpenApi\SchemaBuilder\SettingsProviderInterface;
 
 class Loader
 {
+    const API_VERSION = '1.0.0 alpha';
+
     private static $instance;
 
+    /**
+     * @var SettingsProviderInterface
+     */
     private $settingsProvider;
 
+    /**
+     * @var EndpointFactoryProviderInterface
+     */
     private $endpointProvider;
 
+    /**
+     * @var SchemaBuilderInterface
+     */
     private $schemaBuilder;
 
     private $cacheEnabled = true;
@@ -22,49 +33,40 @@ class Loader
     private $forceRegenerateCache = false;
 
     private function __construct(
-        $useCache = true,
         SettingsProviderInterface $settingsProvider = null,
         EndpointFactoryProviderInterface $endpointProvider = null
     )
     {
-        $this->cacheEnabled = $useCache;
-        $this->setDefaults($settingsProvider, $endpointProvider);
+        $this->setDefaultSettingsProvider($settingsProvider);
+        $this->setDefaultEndpointProvider($endpointProvider);
 
         $schemaBuilder = new SchemaBuilder($this->settingsProvider, $this->endpointProvider);
-        if ($useCache) {
+        if ($this->isCacheEnabled()) {
             $this->schemaBuilder = new CachedSchemaBuilder($schemaBuilder, $this->forceRegenerateCache);
         } else {
             $this->schemaBuilder = $schemaBuilder;
         }
     }
 
-    private function setDefaults($settingsProvider, $endpointProvider)
+    private function setDefaultSettingsProvider($settingsProvider)
     {
         if (!$settingsProvider) {
             $settingsProvider = new IniSettingsProvider();
         }
         $this->settingsProvider = $settingsProvider;
+        $this->settingsProvider->provideSettings()->apiVersion = self::API_VERSION;
+        $this->setCacheEnabled($this->settingsProvider->provideSettings()->cacheEnabled);
+    }
 
+    private function setDefaultEndpointProvider($endpointProvider)
+    {
         if (!$endpointProvider) {
             $endpointProvider = new RoleEndpointFactoryDiscover();
-            if ($this->cacheEnabled) {
+            if ($this->isCacheEnabled()) {
                 $endpointProvider = new CachedRoleEndpointFactoryDiscover($endpointProvider, $this->forceRegenerateCache);
             }
         }
         $this->endpointProvider = $endpointProvider;
-    }
-
-    public static function instance(
-        $useCache = true,
-        SettingsProviderInterface $settingsProvider = null,
-        EndpointFactoryProviderInterface $endpointProvider = null
-    )
-    {
-        if (self::$instance === null) {
-            self::$instance = new static($useCache, $settingsProvider, $endpointProvider);
-        }
-
-        return self::$instance;
     }
 
     public static function clearCache()
@@ -78,6 +80,17 @@ class Loader
             $schemaBuilder = $loader->getSchemaBuilder();
             if ($schemaBuilder instanceof CacheCleanable) {
                 $schemaBuilder->clearCache();
+            }
+            \eZCache::clearByID(['rest']);
+
+            if (\eZINI::instance()->variable('ContentSettings', 'StaticCache') == 'enabled') {
+                /** @var \ezpStaticCache $staticCacheHandler */
+                $staticCacheHandler = \eZExtension::getHandlerClass(new \ezpExtensionOptions(['iniFile' => 'site.ini',
+                    'iniSection' => 'ContentSettings',
+                    'iniVariable' => 'StaticCacheHandler']));
+                $staticCacheHandler->removeURL(
+                    Loader::instance()->getSettingsProvider()->provideSettings()->endpointUrl . '/'
+                );
             }
         }
     }
@@ -120,6 +133,15 @@ class Loader
     public function getSettingsProvider()
     {
         return $this->settingsProvider;
+    }
+
+    public static function instance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new static();
+        }
+
+        return self::$instance;
     }
 
 }
