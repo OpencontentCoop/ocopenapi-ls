@@ -59,7 +59,14 @@ trait ChildEndpointFactoryTrait
         $item = new PathItem();
         foreach ($this->getOperationFactoryCollection()->getOperationFactories() as $operation){
             $operationDefinition = $operation->generateOperation();
-            $operationDefinition->parameters = array_merge($this->getParentOperationFactory()->generateOperation()->parameters, (array)$operationDefinition->parameters);
+            $parameters = [];
+            foreach ($this->getParentOperationFactory()->generateOperation()->parameters as $parameter){
+                $parameters[$parameter->name] = $parameter;
+            }
+            foreach ((array)$operationDefinition->parameters as $parameter){
+                $parameters[$parameter->name] = $parameter;
+            }
+            $operationDefinition->parameters = array_values($parameters);
             $item->{$operation->getMethod()} = $operationDefinition;
         }
 
