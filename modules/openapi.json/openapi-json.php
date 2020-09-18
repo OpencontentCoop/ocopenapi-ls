@@ -5,7 +5,7 @@ use Opencontent\OpenApi;
 try {
     header('HTTP/1.1 200 OK');
     $builder = OpenApi\Loader::instance()->getSchemaBuilder();
-    $data = $builder->build();
+    $data = $builder->build()->toArray();
     //$data = $builder->getEndpoints();
 } catch (Exception $e) {
     header('HTTP/1.1 500 Internal Server Error');

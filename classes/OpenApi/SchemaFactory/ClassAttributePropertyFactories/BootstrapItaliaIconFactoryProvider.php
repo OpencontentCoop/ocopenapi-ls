@@ -10,7 +10,7 @@ class BootstrapItaliaIconFactoryProvider  extends ContentClassAttributePropertyF
     {
         $schema = array(
             "type" => "string",
-            "enum" => array_values(\OpenPABootstrapItaliaIconType::getIconList()),
+            "enum" => array_column(array_values(\OpenPABootstrapItaliaIconType::getIconList()), 'value'),
             "description" => $this->getPropertyDescription(),
         );
 
