@@ -18,17 +18,24 @@ $script->setUseDebugAccumulators( true );
 
 $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
 
-$loader = Loader::instance();
-if ($loader->isCacheEnabled()) {
+try {
 
-    $cli->output('Clear cache');
-    Loader::clearCache();
+    $loader = Loader::instance();
+    if ($loader->isCacheEnabled()) {
 
-    $cli->output('Generate endpoint');
-    $loader->getEndpointProvider()->getEndpointFactoryCollection();
+        $cli->output('Clear cache');
+        Loader::clearCache();
 
-    $cli->output('Generate schema');
-    $loader->getSchemaBuilder()->build();
+        $cli->output('Generate endpoint');
+        $loader->getEndpointProvider()->getEndpointFactoryCollection();
+
+        $cli->output('Generate schema');
+        $loader->getSchemaBuilder()->build();
+    }
+
+}catch (Exception $e){
+    $cli->error($e->getMessage());
+    print_r($e->getTraceAsString());
 }
 
 

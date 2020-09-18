@@ -19,19 +19,36 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 {
     const DISCRIMINATOR_PROPERTY_NAME = 'resource_name';
 
-    private $parentNodeId;
+    const DISCRIMINATOR_SCHEMA_NAME = 'TypedResource';
 
-    private $schemaFactories;
+    const DISCRIMINATED_SCHEMA_PREFIX = 'Typed';
 
-    private $language;
-
+    /**
+     * @var bool
+     */
     protected $debug = true;
 
     /**
+     * @var int
+     */
+    private $parentNodeId;
+
+    /**
+     * @var ContentClassSchemaFactory[]
+     */
+    private $schemaFactories;
+
+    /**
+     * @var null|string
+     */
+    private $language;
+
+    /**
      * OpenApiEnvironmentSettings constructor.
-     * @param int $parentNodeId
+     * @param $parentNodeId
      * @param ContentClassSchemaFactory[] $schemaFactories
      * @param null $language
+     * @throws InvalidParameterException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
      */
     public function __construct($parentNodeId, array $schemaFactories = [], $language = null)
@@ -62,6 +79,33 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         $schemaFactory->serializePayload($payloadBuilder, $data, $this->language);
 
         return ContentCreateStruct::fromArray($payloadBuilder->getArrayCopy());
+    }
+
+    private function discriminateSchemaFactory($data)
+    {
+        if (count($this->schemaFactories) > 1) {
+            if (!isset($data[self::DISCRIMINATOR_PROPERTY_NAME])) {
+                throw new InvalidPayloadException(self::DISCRIMINATOR_PROPERTY_NAME, 'value is required');
+            }
+
+            $schemaFactory = null;
+            $discriminatorValue = $data[self::DISCRIMINATOR_PROPERTY_NAME];
+            foreach ($this->schemaFactories as $schemaFactoryToDiscriminate) {
+                if (self::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactoryToDiscriminate->getName() == $discriminatorValue
+                    || $schemaFactoryToDiscriminate->getName() == $discriminatorValue) {
+                    $schemaFactory = $schemaFactoryToDiscriminate;
+                }
+            }
+
+            if (!$schemaFactory) {
+                throw new InvalidPayloadException(self::DISCRIMINATOR_PROPERTY_NAME, $discriminatorValue);
+            }
+
+        } else {
+            $schemaFactory = $this->schemaFactories[0];
+        }
+
+        return $schemaFactory;
     }
 
     /**
@@ -122,6 +166,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
      * @param Content $content
      * @return array
      * @throws OutOfRangeException
+     * @throws TranslationNotFoundException
      */
     public function filterContent(Content $content)
     {
@@ -129,7 +174,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         foreach ($this->schemaFactories as $schemaFactory) {
             $availableClasses[] = $schemaFactory->getClassIdentifier();
             if ($schemaFactory->getClassIdentifier() == $content->metadata->classIdentifier) {
-                if (!isset($content->data[$this->language])){
+                if (!isset($content->data[$this->language])) {
                     throw new TranslationNotFoundException($content->metadata->remoteId, $this->language);
                 }
                 return $schemaFactory->serializeValue($content, $this->language);
@@ -139,6 +184,11 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         throw new OutOfRangeException($content->metadata->classIdentifier, implode(', ', $availableClasses));
     }
 
+    /**
+     * @param $contentId
+     * @param ContentUpdateStruct $struct
+     * @throws InvalidParameterException
+     */
     public function afterUpdate($contentId, ContentUpdateStruct $struct)
     {
         if ($struct->options->update_remote_id) {
@@ -158,31 +208,5 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
                 }
             }
         }
-    }
-
-    private function discriminateSchemaFactory($data)
-    {
-        if (count($this->schemaFactories) > 1) {
-            if (!isset($data[self::DISCRIMINATOR_PROPERTY_NAME])){
-                throw new InvalidPayloadException(self::DISCRIMINATOR_PROPERTY_NAME, 'value is required');
-            }
-
-            $schemaFactory = null;
-            $discriminatorValue = $data[self::DISCRIMINATOR_PROPERTY_NAME];
-            foreach ($this->schemaFactories as $schemaFactoryToDiscriminate){
-                if ($schemaFactoryToDiscriminate->getName() == $discriminatorValue){
-                    $schemaFactory = $schemaFactoryToDiscriminate;
-                }
-            }
-
-            if (!$schemaFactory){
-                throw new InvalidPayloadException(self::DISCRIMINATOR_PROPERTY_NAME, $discriminatorValue);
-            }
-
-        } else {
-            $schemaFactory = $this->schemaFactories[0];
-        }
-
-        return $schemaFactory;
     }
 }
