@@ -18,6 +18,14 @@ trait ChildEndpointFactoryTrait
      */
     protected $parentOperationFactory;
 
+    public function getId()
+    {
+        if ($this->id === null){
+            $this->id = $this->getParentEndpointFactory()->getId() . $this->generateId();
+        }
+        return $this->id;
+    }
+
     /**
      * @param OperationFactory $parentOperationFactory
      * @return ChildEndpointFactoryTrait
