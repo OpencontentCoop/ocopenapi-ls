@@ -8,6 +8,7 @@ class OpenApiProvider implements ezpRestProviderInterface
     {
         $builder = OpenApi\Loader::instance()->getSchemaBuilder();
         $schema = $builder->build();
+        $version = 1;
 
         $routes = [
             'openApi' => new ezpRestVersionedRoute(new OpenApiRailsRoute(
@@ -16,7 +17,7 @@ class OpenApiProvider implements ezpRestProviderInterface
                 'endpoint',
                 [],
                 'http-get'
-            ), (int)$builder->getSettings()->apiVersion),
+            ), $version),
         ];
 
         // sort pattern by length
@@ -52,7 +53,7 @@ class OpenApiProvider implements ezpRestProviderInterface
                     'action',
                     $defaultValues,
                     'http-' . $method
-                ), (int)$builder->getSettings()->apiVersion);
+                ), $version);
             }
         }
 

@@ -12,6 +12,13 @@ $ViewList['doc'] = [
     'unordered_params' => [],
     "default_navigation_part" => 'ezsetupnavigationpart',
 ];
+$ViewList['terms'] = [
+    'functions' => ['doc'],
+    'script' => 'terms.php',
+    'params' => [],
+    'unordered_params' => [],
+    "default_navigation_part" => 'ezsetupnavigationpart',
+];
 $ViewList['inspect'] = [
     'functions' => ['inspect'],
     'script' => 'inspect.php',
