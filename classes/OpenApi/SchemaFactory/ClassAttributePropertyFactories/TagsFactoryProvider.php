@@ -37,7 +37,10 @@ class TagsFactoryProvider extends ContentClassAttributePropertyFactory
             $schema['items'] = [
                 'type' => 'string'
             ];
-            $schema["enum"] = $this->getDataSource($this->subtreeLimit);
+            $tagList = $this->getDataSource($this->subtreeLimit);
+            if (!empty($tagList)){
+                $schema["enum"] = $tagList;
+            }
         }
 
         return $schema;
