@@ -10,27 +10,6 @@ trait SchemaReferenceGeneratorTrait
     protected function generateSchemasReference()
     {
         $schemaFactories = $this->getSchemaFactories();
-        $items = [];
-        if (count($schemaFactories) > 1) {
-            $resultSchemaItems = [];
-            foreach ($schemaFactories as $schemaFactory) {
-                $resultSchemaItems[] = new OA\Reference('#/components/schemas/' . $schemaFactory->getName());
-            }
-            return new OA\Schema(['oneOf' => $resultSchemaItems]);
-        }
-
-        return new OA\Reference('#/components/schemas/' . $schemaFactories[0]->getName());
-    }
-
-    /**
-     * @return SchemaFactory[]
-     */
-    abstract protected function getSchemaFactories();
-
-    protected function generateRequestBodySchemasReference()
-    {
-        $schemaFactories = $this->getSchemaFactories();
-        $items = [];
         if (count($schemaFactories) > 1) {
             $schemas = [];
             foreach ($schemaFactories as $schemaFactory) {
@@ -45,6 +24,16 @@ trait SchemaReferenceGeneratorTrait
         }
 
         return new OA\Reference('#/components/schemas/' . $schemaFactories[0]->getName());
+    }
+
+    /**
+     * @return SchemaFactory[]
+     */
+    abstract protected function getSchemaFactories();
+
+    protected function generateRequestBodySchemasReference()
+    {
+        return $this->generateSchemasReference();
     }
 
     protected function getItemIdLabel()

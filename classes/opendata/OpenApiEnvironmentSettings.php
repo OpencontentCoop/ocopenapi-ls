@@ -177,7 +177,12 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
                 if (!isset($content->data[$this->language])) {
                     throw new TranslationNotFoundException($content->metadata->remoteId, $this->language);
                 }
-                return $schemaFactory->serializeValue($content, $this->language);
+                $value = $schemaFactory->serializeValue($content, $this->language);
+                if (count($this->schemaFactories) > 1){
+                    $value[self::DISCRIMINATOR_PROPERTY_NAME] = self::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName();
+                }
+
+                return $value;
             }
         }
 

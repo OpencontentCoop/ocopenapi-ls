@@ -4,8 +4,6 @@ namespace Opencontent\OpenApi;
 
 use erasys\OpenApi as OpenApiBase;
 use erasys\OpenApi\Spec\v3 as OA;
-use Opencontent\OpenApi\OperationFactory\ContentObject\CreateOperationFactory;
-use Opencontent\OpenApi\OperationFactory\ContentObject\UpdateOperationFactory;
 use Opencontent\OpenApi\SchemaBuilder\InfoWithAdditionalProperties;
 use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 use Opencontent\OpenApi\SchemaBuilder\Settings;
@@ -171,47 +169,44 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
 
         $schemas = [];
         foreach ($this->getEndpointFactoryCollection() as $endpoint) {
-            foreach ($endpoint->getOperationFactoryCollection()->getSchemaFactories() as $schema) {
-                if (!isset($schemas[$schema->getName()])) {
-                    $schemas[$schema->getName()] = $schema->generateSchema();
+            foreach ($endpoint->getOperationFactoryCollection()->getOperationFactories() as $operationFactory) {
+                foreach ($operationFactory->getSchemaFactories() as $schema) {
+                    if (!isset($schemas[$schema->getName()])) {
+                        $schemas[$schema->getName()] = $schema->generateSchema();
+                    }
+
+                    if (count($operationFactory->getSchemaFactories()) > 1) {
+                        if (!isset($schemas[\OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME])) {
+                            $schemas[\OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME] = new OA\Schema([
+                                "type" => "object",
+                                'properties' => [
+                                    \OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME => $this->generateSchemaProperty([
+                                        'type' => 'string',
+                                        'title' => 'Content type (discriminator)'
+                                    ])
+                                ],
+                                'required' => ['content_type']
+                            ]);
+                        }
+                        foreach ($operationFactory->getSchemaFactories() as $schemaFactory) {
+                            if (!isset($schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName()])) {
+                                $schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName()] = new OA\Schema([
+                                    'allOf' => [
+                                        new OA\Reference('#/components/schemas/' . \OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME),
+                                        new OA\Reference('#/components/schemas/' . $schemaFactory->getName()),
+                                    ]
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
-
         }
 
         $requestBodies = [];
         foreach ($this->getEndpointFactoryCollection() as $endpoint) {
-            foreach ($endpoint->getOperationFactoryCollection()->getOperationFactories() as $operationFactory) {
-
-                if (($operationFactory instanceof CreateOperationFactory || $operationFactory instanceof UpdateOperationFactory)
-                    && count($operationFactory->getSchemaFactories()) > 1
-                ) {
-                    if (!isset($schemas[\OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME])) {
-                        $schemas[\OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME] = new OA\Schema([
-                            "type" => "object",
-                            'properties' => [
-                                \OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME => $this->generateSchemaProperty([
-                                    'type' => 'string',
-                                    'title' => 'Content type (discriminator)'
-                                ])
-                            ],
-                            'required' => ['content_type']
-                        ]);
-                    }
-
-                    foreach ($operationFactory->getSchemaFactories() as $schema) {
-                        $schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schema->getName()] = new OA\Schema([
-                            'allOf' => [
-                                new OA\Reference('#/components/schemas/' . \OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME),
-                                $schema->generateSchema()
-                            ]
-                        ]);
-                    }
-                } else {
-                    foreach ($operationFactory->getSchemaFactories() as $schema) {
-                        $requestBodies[$schema->getName()] = $schema->generateRequestBody();
-                    }
-                }
+            foreach ($endpoint->getOperationFactoryCollection()->getSchemaFactories() as $schemaFactory) {
+                $requestBodies[$schemaFactory->getName()] = $schemaFactory->generateRequestBody();
             }
         }
 
