@@ -4,7 +4,6 @@ namespace Opencontent\OpenApi\OperationFactory\ContentObject;
 
 use erasys\OpenApi\Spec\v3 as OA;
 use Opencontent\OpenApi\EndpointFactory;
-use Opencontent\OpenApi\Exception;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\Exceptions\NotFoundException;
 use Opencontent\OpenApi\Exceptions\OutOfRangeException;
@@ -18,12 +17,12 @@ class DeleteOperationFactory extends OperationFactory\DeleteOperationFactory
     public function getSummary()
     {
         $resourceNames = [];
-        foreach ($this->schemaFactories as $schemaFactory){
+        foreach ($this->schemaFactories as $schemaFactory) {
             $resourceNames[] = $schemaFactory->getName();
         }
         $or = \ezpI18n::tr('ocopenapi', ' or ');
         $resourceName = implode($or, $resourceNames);
-        return \ezpI18n::tr('ocopenapi', 'Delete an existing %name resource by id', null, ['%name' => $resourceName] );
+        return \ezpI18n::tr('ocopenapi', 'Delete an existing %name resource by id', null, ['%name' => $resourceName]);
     }
 
     /**
@@ -55,21 +54,20 @@ class DeleteOperationFactory extends OperationFactory\DeleteOperationFactory
             $query = implode(' and ', $query);
 
             $searchResult = $search->search($query);
-            if ($searchResult->totalCount == 0){
+            if ($searchResult->totalCount == 0) {
                 throw new NotFoundException($requestId);
             }
-        }catch (OutOfRangeException $e){
+        } catch (OutOfRangeException $e) {
             throw new NotFoundException($requestId, $e);
         }
 
-        $payload = !empty($this->getCurrentRequest()->body) ? $this->getCurrentPayload() : null;
-        $moveToTrash = isset($payload['trash']) && $payload['trash'];
+        $moveToTrash = $this->getCurrentRequestParameter('trash') == "true";
 
         $object = \eZContentObject::fetchByRemoteID($requestId);
         if (!$object instanceof \eZContentObject) {
             throw new NotFoundException($requestId);
         }
-        if (\eZContentObjectTrashNode::fetchByContentObjectID($object->attribute('id'))){
+        if (\eZContentObjectTrashNode::fetchByContentObjectID($object->attribute('id'))) {
             throw new NotFoundException($requestId);
         }
         if (!$object->canRemove()) {
@@ -100,27 +98,10 @@ class DeleteOperationFactory extends OperationFactory\DeleteOperationFactory
     protected function generateOperationAdditionalProperties()
     {
         $properties = parent::generateOperationAdditionalProperties();
-
-        $schema = new OA\Schema();
-        $schema->title = $this->name;
-        $schema->type = 'object';
-        $schema->properties = [
-            'trash' => $this->generateSchemaProperty([
-                'type' => 'boolean',
-                'title' => 'Move to trash?',
-                'default' => false,
-            ]),
-        ];
-
-        $properties['requestBody'] = [
-            'content' => ['application/json' => [
-                'schema' => $schema,
-                'required' => false,
-            ]]
-        ];
+        $properties['parameters'][] = new OA\Parameter('trash', OA\Parameter::IN_QUERY, 'If is true move resource to trash else delete permanently from store', [
+            'schema' => $this->generateSchemaProperty(['type' => 'boolean', 'default' => false]),
+        ]);
 
         return $properties;
     }
-
-
 }
