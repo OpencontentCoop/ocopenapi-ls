@@ -40,18 +40,22 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
 
     public function serializeValue(Content $content, $locale)
     {
-        return $this->getResourceEndpointPathForClassIdentifier($content->metadata->classIdentifier)
+        $pathArray = explode('/', $content->metadata->assignedNodes[0]['path_string']);
+        $parentNode = $content->metadata->parentNodes[0];
+        return $this->getResourceEndpointPathForClassIdentifier($content->metadata->classIdentifier, $parentNode, $pathArray)
             . $content->metadata->remoteId
             . '#' . \eZCharTransform::instance()->transformByGroup($content->metadata->name[$locale], 'urlalias');
     }
 
-    private function getResourceEndpointPathForClassIdentifier($classIdentifier)
+    private function getResourceEndpointPathForClassIdentifier($classIdentifier, $parentNode, $pathArray)
     {
-        if (!isset(self::$resourceEndpointPaths[$classIdentifier])) {
-            self::$resourceEndpointPaths[$classIdentifier] = '/';
-            $endpoint = Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection()->findOneByCallback(function ($endpoint) use ($classIdentifier) {
+        if (!isset(self::$resourceEndpointPaths[$classIdentifier.$parentNode])) {
+            self::$resourceEndpointPaths[$classIdentifier.$parentNode] = '/';
+            $endpoint = Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection()->findOneByCallback(function ($endpoint) use ($classIdentifier, $pathArray) {
                 if ($endpoint instanceof NodeClassesEndpointFactory) {
+                    $parentNodeId = $endpoint->getNodeId();
                     if ($endpoint->getOperationByMethod('get') instanceof ReadOperationFactory
+                        && in_array($parentNodeId, $pathArray)
                         && in_array($classIdentifier, $endpoint->getClassIdentifierList())) {
                         return true;
                     }
@@ -61,11 +65,11 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
             if ($endpoint instanceof NodeClassesEndpointFactory) {
                 $resourceEndpointPathParts = explode('/', $endpoint->getPath());
                 array_pop($resourceEndpointPathParts);
-                self::$resourceEndpointPaths[$classIdentifier] = Loader::instance()->getSettingsProvider()->provideSettings()->endpointUrl . implode('/', $resourceEndpointPathParts) . '/';
+                self::$resourceEndpointPaths[$classIdentifier.$parentNode] = Loader::instance()->getSettingsProvider()->provideSettings()->endpointUrl . implode('/', $resourceEndpointPathParts) . '/';
             }
         }
 
-        return self::$resourceEndpointPaths[$classIdentifier];
+        return self::$resourceEndpointPaths[$classIdentifier.$parentNode];
     }
 
 }
