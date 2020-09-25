@@ -79,6 +79,9 @@ class NodeClassesEndpointFactory extends EndpointFactory
         if ($this->operationFactoryCollection instanceof OperationFactoryCollection){
             $this->operationFactoryCollection->setSchemaFactories($this->provideSchemaFactories());
         }
+        $this->id = $this->generateId();
+        $this->provideSchemaFactories(true);
+
         return $this;
     }
 
@@ -94,10 +97,14 @@ class NodeClassesEndpointFactory extends EndpointFactory
     }
 
     /**
+     * @param bool $refresh
      * @return SchemaFactory[]
      */
-    public function provideSchemaFactories()
+    public function provideSchemaFactories($refresh = false)
     {
+        if ($refresh){
+            $this->schemaFactories = null;
+        }
         if ($this->schemaFactories === null) {
             $this->schemaFactories = [];
             foreach ($this->getClassIdentifierList() as $class) {
