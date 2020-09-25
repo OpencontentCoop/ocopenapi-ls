@@ -3,11 +3,13 @@
 namespace Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 
 use Opencontent\OpenApi\Exceptions\InvalidPayloadException;
+use Opencontent\OpenApi\Exceptions\NotFoundException as ApiNotFoundException;
 use Opencontent\OpenApi\Logger;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 use Opencontent\OpenApi\SchemaFactory\RelationsSchemaFactory;
 use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\Exception\NotFoundException;
 use Opencontent\Opendata\Api\Values\Content;
 
 class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
@@ -34,6 +36,7 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
     {
         parent::__construct($class, $attribute);
 
+        /** @var array $classContent */
         $classContent = $this->attribute->content();
         $this->selectionType = (int)$classContent['selection_type'];
         $classConstraintList = (array)$classContent['class_constraint_list'];
@@ -176,14 +179,19 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
             $payloadData = $payload[$this->providePropertyIdentifier()];
             $data = [];
             foreach ($payloadData as $payloadItem) {
-                if (!isset($payloadItem['uri'])){
+                if (!isset($payloadItem['uri'])) {
                     throw new InvalidPayloadException($this->providePropertyIdentifier(), 'Missing url value');
                 }
                 if (strpos($payloadItem['uri'], RelationsSchemaFactory::getResourceEndpointPath($this->attribute->attribute('id'))) !== false) {
-                    $data[] = [
-                        'id' => basename(parse_url($payloadItem['uri'], PHP_URL_PATH)),
-                        'priority' => isset($payloadItem['priority']) ? $payloadItem['priority'] : count($payloadData) + 1
-                    ];
+                    $remoteId = basename(parse_url($payloadItem['uri'], PHP_URL_PATH));
+                    try {
+                        $data[] = [
+                            'id' => $this->getObjectIdByRemoteId($remoteId),
+                            'priority' => isset($payloadItem['priority']) ? $payloadItem['priority'] : count($payloadData) + 1
+                        ];
+                    } catch (NotFoundException $e) {
+                        throw new ApiNotFoundException($payloadItem['uri']);
+                    }
                 } else {
                     throw new InvalidPayloadException($this->providePropertyIdentifier(), $payloadItem['uri']);
                 }
@@ -204,4 +212,15 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
         }
     }
 
+    private function getObjectIdByRemoteId($remoteId)
+    {
+        $whereSql = "ezcontentobject.remote_id='" . \eZDB::instance()->escapeString($remoteId) . "'";
+        $fetchSQLString = "SELECT ezcontentobject.id FROM ezcontentobject WHERE $whereSql";
+        $resArray = \eZDB::instance()->arrayQuery($fetchSQLString);
+        if (count($resArray) == 1 && $resArray !== false) {
+            return $resArray[0]['id'];
+        }
+
+        throw new NotFoundException($remoteId);
+    }
 }
