@@ -77,6 +77,22 @@ class EndpointFactoryCollection implements \ArrayAccess, \Iterator, \JsonSeriali
         return false;
     }
 
+    /**
+     * @param callable $callback
+     * @return EndpointFactory[]
+     */
+    public function findByCallback(callable $callback)
+    {
+        $endpoints = [];
+        foreach ($this->endpoints as $endpoint){
+            if ($callback($endpoint)){
+                $endpoints[] = $endpoint;
+            }
+        }
+
+        return $endpoints;
+    }
+
     public function jsonSerialize()
     {
         return $this->endpoints;

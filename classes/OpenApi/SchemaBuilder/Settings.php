@@ -22,4 +22,8 @@ class Settings
     public $cacheEnabled;
 
     public $debugEnabled;
+
+    public $rateLimitEnabled;
+
+    public $rateLimitDocumentationEnabled;
 }

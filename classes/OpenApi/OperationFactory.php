@@ -160,8 +160,8 @@ abstract class OperationFactory implements \JsonSerializable, \Serializable
             $this->generateOperationAdditionalProperties()
         );
 
-        if (\OpenApiRateLimit::instance()->isEnabled()) {
-            $operationDefinition->responses['401'] = new OA\Response('Unauthorized', null, $this->generateResponseHeaders());
+        $operationDefinition->responses['401'] = new OA\Response('Unauthorized', null, $this->generateResponseHeaders());
+        if (\OpenApiRateLimit::instance()->isEnableDocumentation()) {
             $operationDefinition->responses['429'] = new OA\Response('Too Many Requests', null, $this->generateResponseHeaders());
         }
 
@@ -183,7 +183,7 @@ abstract class OperationFactory implements \JsonSerializable, \Serializable
     protected function generateResponseHeaders($isError = false)
     {
         $headers = [];
-        if (\OpenApiRateLimit::instance()->isEnabled()) {
+        if (\OpenApiRateLimit::instance()->isEnableDocumentation()) {
             $headers = [
                 'X-RateLimit-Limit' => new OA\Header(
                     'The maximum number of requests that the client is allowed to make in this window.',

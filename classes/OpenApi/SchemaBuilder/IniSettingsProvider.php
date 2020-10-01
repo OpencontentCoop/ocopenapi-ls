@@ -27,6 +27,13 @@ class IniSettingsProvider implements SettingsProviderInterface
 
             $settings->cacheEnabled = true;
 
+            if (\eZINI::instance('ocopenapi.ini')->hasVariable('GeneralSettings', 'RateLimit')) {
+                $settings->rateLimitEnabled = \eZINI::instance('ocopenapi.ini')->variable('GeneralSettings', 'RateLimit') == 'enabled';
+            }
+            if (\eZINI::instance('ocopenapi.ini')->hasVariable('GeneralSettings', 'RateLimitDocumentation')) {
+                $settings->rateLimitDocumentationEnabled = \eZINI::instance('ocopenapi.ini')->variable('GeneralSettings', 'RateLimitDocumentation') == 'enabled';
+            }
+
             $this->settings = $settings;
         }
 

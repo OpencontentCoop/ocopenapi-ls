@@ -1,6 +1,7 @@
 <?php
 
 use Opencontent\OpenApi\Exceptions\TooManyRequestsException;
+use Opencontent\OpenApi\Loader;
 
 class OpenApiRateLimit
 {
@@ -14,6 +15,11 @@ class OpenApiRateLimit
      * @var bool
      */
     private $enabled = true;
+
+    /**
+     * @var bool
+     */
+    private $enableDocumentation = true;
 
     /**
      * @var int
@@ -54,6 +60,13 @@ class OpenApiRateLimit
     {
         if (self::$instance === null) {
             self::$instance = new static();
+
+            self::$instance->setEnabled(
+                Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitEnabled
+            );
+            self::$instance->setEnableDocumentation(
+                Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitDocumentationEnabled
+            );
         }
 
         return self::$instance;
@@ -117,11 +130,27 @@ class OpenApiRateLimit
     }
 
     /**
+     * @return bool
+     */
+    public function isEnableDocumentation()
+    {
+        return $this->enableDocumentation;
+    }
+
+    /**
      * @param bool $enabled
      */
     public function setEnabled($enabled)
     {
         $this->enabled = (bool)$enabled;
+    }
+
+    /**
+     * @param bool $enableDocumentation
+     */
+    public function setEnableDocumentation($enableDocumentation)
+    {
+        $this->enableDocumentation = $enableDocumentation;
     }
 
     private function getValue($field)
