@@ -2,8 +2,7 @@
 
 namespace Opencontent\OpenApi;
 
-use Opencontent\OpenApi\EndpointDiscover\CachedRoleEndpointFactoryDiscover;
-use Opencontent\OpenApi\EndpointDiscover\RoleEndpointFactoryDiscover;
+use Opencontent\OpenApi\EndpointDiscover\ChainEndpointFactoryDiscover;
 use Opencontent\OpenApi\SchemaBuilder\IniSettingsProvider;
 use Opencontent\OpenApi\SchemaBuilder\SettingsProviderInterface;
 
@@ -60,18 +59,33 @@ class Loader
 
     private function setDefaultEndpointProvider($endpointProvider)
     {
-        if (!$endpointProvider) {
-            $endpointProvider = new RoleEndpointFactoryDiscover();
-            if ($this->isCacheEnabled()) {
-                $endpointProvider = new CachedRoleEndpointFactoryDiscover($endpointProvider, $this->forceRegenerateCache);
+        if (!$endpointProvider && $this->endpointProvider === null) {
+            $providers = [];
+            if (\eZINI::instance('ocopenapi.ini')->hasVariable('EndpointFactoryProvider', 'ProviderList')) {
+                $providerList = \eZINI::instance('ocopenapi.ini')->variable('EndpointFactoryProvider', 'ProviderList');
+                foreach ($providerList as $providerClass){
+                    if (class_exists($providerClass)){
+                        $provider = new $providerClass();
+                        if ($this->forceRegenerateCache && $provider instanceof CacheCleanable){
+                            $provider->clearCache();
+                        }
+                        if ($provider instanceof EndpointFactoryProviderInterface){
+                            $providers[] = $provider;
+                        }
+                    }
+                }
             }
+            if (empty($providers)){
+                throw new \RuntimeException("Provider list is empty");
+            }
+            $endpointProvider = new ChainEndpointFactoryDiscover($providers);
         }
         $this->endpointProvider = $endpointProvider;
     }
 
     public static function clearCache()
     {
-        $loader = new static();
+        $loader = self::instance();
         if ($loader->isCacheEnabled()) {
             $endpointProvider = $loader->getEndpointProvider();
             if ($endpointProvider instanceof CacheCleanable) {
@@ -112,7 +126,7 @@ class Loader
     }
 
     /**
-     * @return RoleEndpointFactoryDiscover|EndpointFactoryProviderInterface
+     * @return EndpointFactoryProviderInterface
      */
     public function getEndpointProvider()
     {

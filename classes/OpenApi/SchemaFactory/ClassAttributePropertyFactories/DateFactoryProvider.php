@@ -13,6 +13,8 @@ class DateFactoryProvider extends ContentClassAttributePropertyFactory
 
         return array_merge_recursive($data, array(
             "format" => "date",
+            // 'o' is ISO-8601 week-numbering year. This has the same value as Y,
+            // except that if the ISO week number (W) belongs to the previous or next year, that year is used instead.
             "default" => $default == \eZDateType::DEFAULT_CURRENT_DATE ? date('o-m-d') : null
         ));
     }

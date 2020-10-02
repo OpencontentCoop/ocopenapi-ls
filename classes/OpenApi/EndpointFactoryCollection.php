@@ -98,5 +98,12 @@ class EndpointFactoryCollection implements \ArrayAccess, \Iterator, \JsonSeriali
         return $this->endpoints;
     }
 
+    /**
+     * @return EndpointFactory[]
+     */
+    public function getEndpoints()
+    {
+        return $this->endpoints;
+    }
 
 }

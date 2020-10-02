@@ -6,5 +6,12 @@ use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 
 class DateTimeFactoryProvider extends DateFactoryProvider
 {
+    public function provideProperties()
+    {
+        $data = parent::provideProperties();
+        $data['format'] = 'data-time';
+
+        return $data;
+    }
 
 }

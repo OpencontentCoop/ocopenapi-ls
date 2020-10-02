@@ -26,8 +26,9 @@ try {
         $cli->output('Clear cache');
         Loader::clearCache();
 
-        $cli->output('Generate endpoint');
-        $loader->getEndpointProvider()->getEndpointFactoryCollection();
+        $endpointProvider = $loader->getEndpointProvider();
+        $cli->output('Generate endpoint from ' . get_class($endpointProvider));
+        $endpointProvider->getEndpointFactoryCollection();
 
         $cli->output('Generate schema');
         $loader->getSchemaBuilder()->build();

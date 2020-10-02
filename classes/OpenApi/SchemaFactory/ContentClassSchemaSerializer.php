@@ -3,11 +3,15 @@
 namespace Opencontent\OpenApi\SchemaFactory;
 
 use erasys\OpenApi\Spec\v3 as OA;
+use eZContentClass;
+use eZContentClassAttribute;
+use eZINI;
 use Opencontent\OpenApi\Exceptions\InvalidPayloadException;
 use Opencontent\OpenApi\Logger;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 use Opencontent\Opendata\Api\Values\Content;
+use RuntimeException;
 
 class ContentClassSchemaSerializer
 {
@@ -59,9 +63,9 @@ class ContentClassSchemaSerializer
     private function loadClass($classIdentifier)
     {
         if (!isset(self::$classes[$classIdentifier])) {
-            self::$classes[$classIdentifier] = \eZContentClass::fetchByIdentifier($classIdentifier);
-            if (!self::$classes[$classIdentifier] instanceof \eZContentClass) {
-                throw new \RuntimeException("$classIdentifier not found");
+            self::$classes[$classIdentifier] = eZContentClass::fetchByIdentifier($classIdentifier);
+            if (!self::$classes[$classIdentifier] instanceof eZContentClass) {
+                throw new RuntimeException("$classIdentifier not found");
             }
         }
 
@@ -69,11 +73,11 @@ class ContentClassSchemaSerializer
     }
 
     /**
-     * @param \eZContentClass $class
+     * @param eZContentClass $class
      * @param string $schemaName
      * @return ContentClassAttributePropertyFactory[]
      */
-    private function loadFactories(\eZContentClass $class, $schemaName)
+    private function loadFactories(eZContentClass $class, $schemaName)
     {
         if (!isset(self::$factories[$class->attribute('identifier')][$schemaName])) {
             self::$factories[$class->attribute('identifier')][$schemaName] = [];
@@ -84,6 +88,15 @@ class ContentClassSchemaSerializer
                 'published',
                 'modified',
             ];
+
+            if (eZINI::instance('ocopenapi.ini')->hasVariable('ContentMetaSettings', 'ContentMetaPropertyFactories')) {
+                $keys = array_keys(eZINI::instance('ocopenapi.ini')->variable('ContentMetaSettings', 'ContentMetaPropertyFactories'));
+                $classIdentifier = $class->attribute('identifier');
+                foreach ($keys as $field){
+                    $metaFields[] = str_replace($classIdentifier . '/', '', $field);
+                }
+            }
+
             foreach ($metaFields as $identifier) {
                 $factory = self::loadContentMetaPropertyFactory($class, $identifier);
                 if ($factory instanceof ContentMetaPropertyFactory) {
@@ -98,11 +111,12 @@ class ContentClassSchemaSerializer
                 }
             }
         }
+
         return self::$factories[$class->attribute('identifier')][$schemaName];
     }
 
     /**
-     * @param \eZContentClass $class
+     * @param eZContentClass $class
      * @param $identifier
      * @return ContentMetaPropertyFactory|false
      */
@@ -113,8 +127,8 @@ class ContentClassSchemaSerializer
             self::$metas[$class->attribute('id') . $identifier] = false;
 
             $settings = [];
-            if (\eZINI::instance('ocopenapi.ini')->hasGroup('ContentMetaSettings')) {
-                $settings = \eZINI::instance('ocopenapi.ini')->group('ContentMetaSettings');
+            if (eZINI::instance('ocopenapi.ini')->hasGroup('ContentMetaSettings')) {
+                $settings = eZINI::instance('ocopenapi.ini')->group('ContentMetaSettings');
             }
 
             $customMetaPropertyFactory = 'null';
@@ -154,8 +168,8 @@ class ContentClassSchemaSerializer
     }
 
     /**
-     * @param \eZContentClass $class
-     * @param \eZContentClassAttribute $attribute
+     * @param eZContentClass $class
+     * @param eZContentClassAttribute $attribute
      * @return ContentClassAttributePropertyFactory|false
      */
     public static function loadContentClassAttributePropertyFactory($class, $attribute)
@@ -164,8 +178,8 @@ class ContentClassSchemaSerializer
             self::$properties[$attribute->attribute('id')] = false;
 
             $settings = [];
-            if (\eZINI::instance('ocopenapi.ini')->hasGroup('ClassAttributeSettings')) {
-                $settings = \eZINI::instance('ocopenapi.ini')->group('ClassAttributeSettings');
+            if (eZINI::instance('ocopenapi.ini')->hasGroup('ClassAttributeSettings')) {
+                $settings = eZINI::instance('ocopenapi.ini')->group('ClassAttributeSettings');
             }
 
             $customAttributePropertyFactory = 'null';
@@ -220,6 +234,7 @@ class ContentClassSchemaSerializer
                     'openpareverserelationlist' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
                     'ezpage' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
                     'ezpaex' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
+                    'occhart' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
                 ];
 
                 if (isset($defaults[$dataType])) {

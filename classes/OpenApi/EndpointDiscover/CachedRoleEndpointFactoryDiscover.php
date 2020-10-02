@@ -16,12 +16,9 @@ class CachedRoleEndpointFactoryDiscover extends EndpointFactoryProvider implemen
 
     private $realProvider;
 
-    private $forceRegenerate;
-
-    public function __construct(EndpointFactoryProviderInterface $realProvider, $forceRegenerate = false)
+    public function __construct()
     {
-        $this->realProvider = $realProvider;
-        $this->forceRegenerate = $forceRegenerate;
+        $this->realProvider = new RoleEndpointFactoryDiscover();
     }
 
     public function getEndpointFactoryCollection()
@@ -48,10 +45,6 @@ class CachedRoleEndpointFactoryDiscover extends EndpointFactoryProvider implemen
         $cacheFilePath = $this->cacheFilePath();
         $cacheFile = \eZClusterFileHandler::instance($cacheFilePath);
         $realProvider = $this->realProvider;
-
-        if ($this->forceRegenerate){
-            $this->clearCache();
-        }
 
         return unserialize($cacheFile->processCache(
             function ($file) {
