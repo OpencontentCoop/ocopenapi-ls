@@ -34,6 +34,7 @@ class OpenApiController extends ezpRestMvcController
         \eZModule::setGlobalPathList(
             \eZINI::instance('module.ini')->variable('ModuleSettings', 'ModuleRepositories')
         );
+        eZDB::setErrorHandling(eZDB::ERROR_HANDLING_EXCEPTIONS);
     }
 
     public function doEndpoint()
