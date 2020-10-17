@@ -8,54 +8,19 @@ use Opencontent\OpenApi\Loader;
 use Opencontent\OpenApi\OperationFactory\Relations\ReadOperationFactory;
 use Opencontent\OpenApi\SchemaFactory;
 
-class RelationsSchemaFactory extends SchemaFactory implements ClassAttributeSchemaFactoryInterface
+class RelationsSchemaFactory extends AbstractClassAttributeSchemaFactory
 {
-    protected $classAttributeId;
-
-    protected $classAttribute;
-
-    protected $class;
-
     private $classConstraintList;
 
     private static $resourceEndpointPaths = [];
 
     public function __construct($classAttributeId)
     {
-        $this->classAttributeId = $classAttributeId;
-        $this->classConstraintList = \eZContentClassAttribute::fetch($this->classAttributeId)->content()['class_constraint_list'];
+        parent::__construct($classAttributeId);
+        /** @var array $attributeContent */
+        $attributeContent = $this->getClassAttribute()->content();
+        $this->classConstraintList = $attributeContent['class_constraint_list'];
         $this->name = $this->toCamelCase('related_resource');
-
-    }
-
-    /**
-     * @return integer
-     */
-    public function getClassAttributeId()
-    {
-        return $this->classAttributeId;
-    }
-
-    /**
-     * @return \eZContentClassAttribute
-     */
-    public function getClassAttribute()
-    {
-        if ($this->classAttribute === null){
-            $this->classAttribute = \eZContentClassAttribute::fetch($this->getClassAttributeId());
-        }
-        return $this->classAttribute;
-    }
-
-    /**
-     * @return \eZContentClass
-     */
-    public function getClass()
-    {
-        if ($this->class === null){
-            $this->class = \eZContentClass::fetch($this->getClassAttribute()->attribute('contentclass_id'));
-        }
-        return $this->class;
     }
 
     /**
@@ -91,14 +56,6 @@ class RelationsSchemaFactory extends SchemaFactory implements ClassAttributeSche
         return new OA\RequestBody(['application/json' => new OA\MediaType([
             'schema' => $schema
         ])]);
-    }
-
-    public function serialize()
-    {
-        return serialize([
-            'classAttributeId' => $this->classAttributeId,
-            'name' => $this->name,
-        ]);
     }
 
     /**

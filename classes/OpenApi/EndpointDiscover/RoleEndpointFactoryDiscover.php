@@ -40,7 +40,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             foreach ($this->endpoints as $endpoint) {
                 $path = $endpoint->getPath();
                 $path = str_replace('{', 'aaa', $path);
-                $sortKey = \eZCharTransform::instance()->transformByGroup($path , 'identifier');
+                $sortKey = \eZCharTransform::instance()->transformByGroup($path, 'identifier');
                 $sort[$sortKey] = $endpoint;
             }
             ksort($sort);
@@ -215,7 +215,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                     $this->endpoints[$subPath] = $subEndpoint;
                 }
 
-
+                foreach ($this->createMultiBinarySubEndpoints($endpoint, $operation) as $subPath => $subEndpoint) {
+                    $this->endpoints[$subPath] = $subEndpoint;
+                }
             }
         }
     }
@@ -241,6 +243,51 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             }
 
         }
+    }
+
+    private function createMultiBinarySubEndpoints($endpoint, $operation)
+    {
+        $endpoints = [];
+        foreach ($operation->getSchemaFactories() as $schema) {
+            if ($schema instanceof ContentClassSchemaFactory) {
+                $class = \eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
+                /** @var \eZContentClassAttribute $classAttribute */
+                foreach ($class->dataMap() as $classAttribute) {
+
+                    if ($classAttribute->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING) {
+
+                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
+                            $class,
+                            $classAttribute
+                        )->providePropertyIdentifier();
+
+                        $multiBinaryPath = $endpoint->getPath() . '/' . $identifier;
+                        $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
+                            ->setPath($multiBinaryPath)
+                            ->setTags($endpoint->getTags())
+                            ->setParentEndpointFactory($endpoint)
+                            ->setParentOperationFactory($operation)
+                            ->setOperationFactoryCollection((new OperationFactoryCollection([
+                                (new OperationFactory\MultiBinary\CreateOperationFactory()),
+                                (new OperationFactory\MultiBinary\ListOperationFactory()),
+                            ])));
+
+                        $multiBinaryPath = $multiBinaryPath . '/{multiBinaryFilename}';
+                        $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
+                            ->setPath($multiBinaryPath)
+                            ->setTags($endpoint->getTags())
+                            ->setParentEndpointFactory($endpoint)
+                            ->setParentOperationFactory($operation)
+                            ->setOperationFactoryCollection((new OperationFactoryCollection([
+                                (new OperationFactory\MultiBinary\ReadOperationFactory()),
+                                (new OperationFactory\MultiBinary\UpdateOperationFactory()),
+                                (new OperationFactory\MultiBinary\DeleteOperationFactory()),
+                            ])));
+                    }
+                }
+            }
+        }
+        return $endpoints;
     }
 
     private function createMatrixSubEndpoints($endpoint, $operation)

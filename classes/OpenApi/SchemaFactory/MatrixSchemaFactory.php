@@ -3,52 +3,9 @@
 namespace Opencontent\OpenApi\SchemaFactory;
 
 use erasys\OpenApi\Spec\v3 as OA;
-use Opencontent\OpenApi\SchemaFactory;
 
-class MatrixSchemaFactory extends SchemaFactory implements ClassAttributeSchemaFactoryInterface
+class MatrixSchemaFactory extends AbstractClassAttributeSchemaFactory
 {
-    protected $classAttributeId;
-
-    protected $classAttribute;
-
-    protected $class;
-
-    public function __construct($classAttributeId)
-    {
-        $this->classAttributeId = $classAttributeId;
-        $this->name = $this->toCamelCase(\eZContentClassAttribute::fetch($this->classAttributeId)->attribute('identifier') . '_item');
-    }
-
-    /**
-     * @return integer
-     */
-    public function getClassAttributeId()
-    {
-        return $this->classAttributeId;
-    }
-
-    /**
-     * @return \eZContentClassAttribute
-     */
-    public function getClassAttribute()
-    {
-        if ($this->classAttribute === null){
-            $this->classAttribute = \eZContentClassAttribute::fetch($this->getClassAttributeId());
-        }
-        return $this->classAttribute;
-    }
-
-    /**
-     * @return \eZContentClass
-     */
-    public function getClass()
-    {
-        if ($this->class === null){
-            $this->class = \eZContentClass::fetch($this->getClassAttribute()->attribute('contentclass_id'));
-        }
-        return $this->class;
-    }
-
     /**
      * @return OA\Schema
      */
@@ -85,13 +42,5 @@ class MatrixSchemaFactory extends SchemaFactory implements ClassAttributeSchemaF
         return new OA\RequestBody(['application/json' => new OA\MediaType([
             'schema' => $schema
         ])]);
-    }
-
-    public function serialize()
-    {
-        return serialize([
-            'classAttributeId' => $this->classAttributeId,
-            'name' => $this->name,
-        ]);
     }
 }

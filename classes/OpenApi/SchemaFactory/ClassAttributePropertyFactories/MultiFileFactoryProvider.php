@@ -2,6 +2,7 @@
 
 namespace Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 
+use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 use Opencontent\Opendata\Api\Values\Content;
 
@@ -41,11 +42,65 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
         $data = [];
         foreach ($content as $item) {
             $data[] = [
-                'filename' => $content['filename'],
-                'uri' => $content['url'],
+                'filename' => $item['filename'],
+                'uri' => $item['url'],
             ];
         }
 
         return $data;
+    }
+
+    public function serializePayload(PayloadBuilder $payloadBuilder, array $payload, $locale)
+    {
+        if (isset($payload[$this->providePropertyIdentifier()])){
+            $value = $payload[$this->providePropertyIdentifier()];
+            $normalizedValue = [];
+            foreach ($value as $item){
+                if (isset($item['uri'])) {
+                    $item = $this->getPayloadFileData($item);
+                }
+                $normalizedValue[] = $item;
+            }
+            $payloadBuilder->setData(
+                $locale,
+                $this->attribute->attribute('identifier'),
+                $normalizedValue
+            );
+        }
+    }
+
+    private function getPayloadFileData($item)
+    {
+        $fileUri = $item['uri'];
+        if (!\eZHTTPTool::getDataByURL(trim($fileUri), true)) {
+            $parts = explode('/', $fileUri);
+            $filename = array_pop($parts);
+            array_pop($parts);
+            $originalFilename = array_pop($parts);
+            $version = array_pop($parts);
+            $attributeId = array_pop($parts);
+
+            $binaryFile = \eZPersistentObject::fetchObject(\eZMultiBinaryFile::definition(),
+                null,
+                array(
+                    'contentobject_attribute_id' => (int)$attributeId,
+                    'version' => (int)$version,
+                    'filename' => $originalFilename
+                )
+            );
+            if ($binaryFile instanceof \eZMultiBinaryFile) {
+
+                $fileHandler = \eZClusterFileHandler::instance($binaryFile->attribute('filepath'));
+                return [
+                    'filename' => $item['filename'],
+                    'file' => base64_encode($fileHandler->fetchContents())
+                ];
+            }
+        }
+
+        return [
+            'filename' => $item['filename'],
+            'url' => $fileUri
+        ];
     }
 }

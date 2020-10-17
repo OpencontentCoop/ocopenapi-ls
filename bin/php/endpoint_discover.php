@@ -1,4 +1,7 @@
 <?php
+
+use Opencontent\OpenApi\EndpointDiscover\RoleEndpointFactoryDiscover;
+
 require 'autoload.php';
 
 $cli = eZCLI::instance();
@@ -13,7 +16,7 @@ $options = $script->getOptions();
 $script->initialize();
 $script->setUseDebugAccumulators( true );
 
-$discover = new \Opencontent\OpenApi\EndpointDiscover\RoleEndpointFactoryDiscover($options['verbose'] ? $cli : null);
+$discover = new RoleEndpointFactoryDiscover($options['verbose'] ? $cli : null);
 $endpoints = $discover->getEndpointFactoryCollection();
 
 $rows = $endpoints;
@@ -39,7 +42,7 @@ if (!empty($rows)) {
             $table[$index][]->content = $value;
         }
     }
-//    $table->outputTable();
+    $table->outputTable();
 }
 
 $cli->output();
