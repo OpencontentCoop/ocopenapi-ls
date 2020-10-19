@@ -13,6 +13,11 @@ class CreateOperationFactory extends OperationFactory\CreateOperationFactory
 {
     use OperationFactory\ChildOperationFactoryTrait;
 
+    public function getSummary()
+    {
+        return \ezpI18n::tr('ocopenapi', 'Add a binary file in the %name field', null, ['%name' => $this->getPropertyFactory()->providePropertyIdentifier()]);
+    }
+
     /**
      * @param ChildEndpointFactoryInterface $endpointFactory
      * @return \ezpRestMvcResult

@@ -12,6 +12,11 @@ class DeleteOperationFactory extends OperationFactory\DeleteOperationFactory
 {
     use OperationFactory\ChildOperationFactoryTrait;
 
+    public function getSummary()
+    {
+        return \ezpI18n::tr('ocopenapi', 'Delete an existing binary file in the %name field by file name', null, ['%name' => $this->getPropertyFactory()->providePropertyIdentifier()]);
+    }
+
     /**
      * @param ChildEndpointFactoryInterface $endpointFactory
      * @return \ezpRestMvcResult
