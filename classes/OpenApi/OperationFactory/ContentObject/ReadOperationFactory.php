@@ -39,26 +39,8 @@ class ReadOperationFactory extends OperationFactory\ReadOperationFactory
         if (empty($requestId)){
             throw new InvalidParameterException($this->getItemIdLabel(), $requestId);
         }
-        try {
-            $search = $this->getSearchRepository($endpointFactory);
-            $query = [];
-            $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
-            $query[] = 'subtree [' . $endpointFactory->getNodeId() . ']';
-            $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
-            $query[] = 'raw[meta_remote_id_ms] = \'' . $requestId . '\'';
-            $query[] = 'limit 1';
-            $query[] = 'offset 0';
-            $query = implode(' and ', $query);
 
-            $searchResult = $search->search($query);
-            if ($searchResult->totalCount > 0){
-                $result->variables = $searchResult->searchHits[0];
-            }else{
-                throw new NotFoundException($requestId);
-            }
-        }catch (OutOfRangeException $e){
-            throw new NotFoundException($requestId, $e);
-        }
+        $result->variables = $this->getResource($endpointFactory, $requestId);
 
         return $result;
     }

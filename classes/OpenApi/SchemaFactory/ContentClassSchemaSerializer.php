@@ -92,7 +92,7 @@ class ContentClassSchemaSerializer
             if (eZINI::instance('ocopenapi.ini')->hasVariable('ContentMetaSettings', 'ContentMetaPropertyFactories')) {
                 $keys = array_keys(eZINI::instance('ocopenapi.ini')->variable('ContentMetaSettings', 'ContentMetaPropertyFactories'));
                 $classIdentifier = $class->attribute('identifier');
-                foreach ($keys as $field){
+                foreach ($keys as $field) {
                     $metaFields[] = str_replace($classIdentifier . '/', '', $field);
                 }
             }
@@ -279,15 +279,25 @@ class ContentClassSchemaSerializer
         $errors = [];
         foreach ($factories as $identifier => $factory) {
             try {
-                if ($factory->isRequired() && !isset($payload[$factory->providePropertyIdentifier()])){
+                if ($factory->isRequired()
+                    && !isset($payload[$factory->providePropertyIdentifier()])
+                    && $payloadBuilder->action !== PayloadBuilder::PATCH) {
                     throw new InvalidPayloadException($factory->providePropertyIdentifier(), 'field is required');
                 }
+                if ($factory->isRequired()
+                    && array_key_exists($factory->providePropertyIdentifier(), $payload)
+                    && ($payload[$factory->providePropertyIdentifier()] === null
+                        || $payload[$factory->providePropertyIdentifier()] === ''
+                        || $payload[$factory->providePropertyIdentifier()] === [])
+                ) {
+                    throw new InvalidPayloadException($factory->providePropertyIdentifier(), 'field can not be empty');
+                }
                 $factory->serializePayload($payloadBuilder, $payload, $locale);
-            }catch (InvalidPayloadException $e){
+            } catch (InvalidPayloadException $e) {
                 $errors[] = $e->getMessage();
             }
         }
-        if (count($errors) > 0){
+        if (count($errors) > 0) {
             throw new InvalidPayloadException(implode(', ', $errors));
         }
     }

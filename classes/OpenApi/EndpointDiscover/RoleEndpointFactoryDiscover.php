@@ -21,6 +21,8 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
      */
     private $endpoints;
 
+    private $miscellanea;
+
     public function __construct(\eZCLI $cli = null)
     {
         $this->cli = $cli;
@@ -138,6 +140,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 'operations' => new OperationFactoryCollection([
                                     (new OperationFactory\ContentObject\ReadOperationFactory()),
                                     (new OperationFactory\ContentObject\UpdateOperationFactory()),
+                                    (new OperationFactory\ContentObject\MergePatchOperationFactory()),
                                     (new OperationFactory\ContentObject\DeleteOperationFactory()),
                                 ]),
                             ],
@@ -179,13 +182,13 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                         foreach ($pathGroup as $pathGroupItem) {
                             /** @var \eZContentObjectTreeNode $node */
                             foreach ($pathGroupItem['nodes'] as $node) {
-                                $path = strtolower($node->urlAlias()) . $pathGroupItem['path_suffix'];
-                                $pathParts = explode('/', $path);
-                                $tag = array_shift($pathParts);
-                                $path = '/' . $path;
+                                $path = '/' . strtolower($node->urlAlias()) . $pathGroupItem['path_suffix'];
+                                $tag = str_replace('/', '-', strtolower($node->urlAlias()));
                                 if (isset($this->endpoints[$path]) && $this->endpoints[$path] instanceof EndpointFactory\NodeClassesEndpointFactory) {
+                                    $this->log("Append to node endpoint $path classes " . implode(', ', $classes));
                                     $this->endpoints[$path]->appendClassIdentifierList($classes);
                                 } else {
+                                    $this->log("Create node endpoint $path for classes " . implode(', ', $classes));
                                     $this->endpoints[$path] = (new EndpointFactory\NodeClassesEndpointFactory($item->attribute('node_id'), $classes))
                                         ->setPath($path)
                                         ->addTag($tag)
@@ -207,6 +210,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 
                 $operation = $endpoint->getOperationByMethod('get');
 
+                $this->log('...analyze ' . $endpoint->getPath(), 'warning');
                 foreach ($this->createMatrixSubEndpoints($endpoint, $operation) as $subPath => $subEndpoint) {
                     $this->endpoints[$subPath] = $subEndpoint;
                 }
@@ -262,6 +266,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                         )->providePropertyIdentifier();
 
                         $multiBinaryPath = $endpoint->getPath() . '/' . $identifier;
+                        $this->log("Create multibinary endpoint $multiBinaryPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
                         $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
                             ->setPath($multiBinaryPath)
                             ->setTags($endpoint->getTags())
@@ -307,6 +312,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                         )->providePropertyIdentifier();
 
                         $matrixPath = $endpoint->getPath() . '/' . $identifier;
+                        $this->log("Create matrix endpoint $matrixPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
                         $endpoints[$matrixPath] = (new EndpointFactory\MatrixEndpointFactory($classAttribute->attribute('id')))
                             ->setPath($matrixPath)
                             ->setTags($endpoint->getTags())
@@ -364,13 +370,14 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                         );
                                         if (!empty($relatedEndpoints)) {
                                             foreach ($relatedEndpoints as $relatedReadOnlyEndpointPath => $relatedReadOnlyEndpoint) {
-                                                $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $classContent['default_placement']['node_id'] . ' ' .
-                                                    implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
+//                                                $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $classContent['default_placement']['node_id'] . ' ' .
+//                                                    implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
                                                 $this->endpoints[$relatedReadOnlyEndpointPath] = $relatedReadOnlyEndpoint;
                                             }
                                         }
                                     } else {
                                         foreach ($relatedEndpoints as $relatedEndpoint) {
+                                            $this->log("Append to node endpoint {$relatedEndpoint->getPath()} classes " . implode(', ', $classContent['class_constraint_list']));
                                             $relatedEndpoint->appendClassIdentifierList((array)$classContent['class_constraint_list']);
                                         }
                                     }
@@ -385,6 +392,13 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 }
 
                                 if (!empty($classContent['class_constraint_list'])) {
+
+                                    $relatedEndpoints = $this->findEndpointsByClasses($classContent['class_constraint_list']);
+                                    if (empty($relatedEndpoints)) {
+                                        //non è configurato un nodo predefinito: aggiungo a miscellanea
+                                        $relatedEndpoints = $this->appendToMiscEndpoints($classContent['class_constraint_list']);
+                                    }
+/*
                                     //non è configurato un nodo predefinito: cerco di capire se tutti gli oggetti previsti sono sotto a un unico nodo
                                     $contentSearch = new ContentSearch();
                                     $contentSearch->setEnvironment(new \DefaultEnvironmentSettings());
@@ -403,18 +417,19 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                             );
                                             if (!empty($relatedEndpoints)) {
                                                 foreach ($relatedEndpoints as $relatedReadOnlyEndpointPath => $relatedReadOnlyEndpoint) {
-                                                    $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $nodeId . ' ' .
-                                                        implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
+//                                                    $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $nodeId . ' ' .
+//                                                        implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
                                                     $this->endpoints[$relatedReadOnlyEndpointPath] = $relatedReadOnlyEndpoint;
                                                 }
                                             }
                                         } else {
                                             foreach ($relatedEndpoints as $relatedEndpoint) {
+                                                $this->log("Append to node endpoint {$relatedEndpoint->getPath()} classes " . implode(', ', $classContent['class_constraint_list']));
                                                 $relatedEndpoint->appendClassIdentifierList((array)$classContent['class_constraint_list']);
                                             }
                                         }
                                     }
-
+*/
                                 }
                             }
 
@@ -430,6 +445,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             )->providePropertyIdentifier();
 
                             $relationsPath = $endpoint->getPath() . '/' . $identifier;
+                            $this->log("Create relation endpoint $relationsPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
                             $endpoints[$relationsPath] = (new EndpointFactory\RelationsEndpointFactory($classAttribute->attribute('id')))
                                 ->setPath($relationsPath)
                                 ->setTags($endpoint->getTags())
@@ -487,6 +503,27 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
     }
 
     /**
+     * @param string[] $classes
+     * @return EndpointFactory\NodeClassesEndpointFactory[]
+     */
+    private function findEndpointsByClasses($classes)
+    {
+        $endpoints = [];
+        foreach ($this->endpoints as $endpoint) {
+            if ($endpoint instanceof EndpointFactory\NodeClassesEndpointFactory) {
+                $matchClasses = $endpoint->getClassIdentifierList();
+                sort($matchClasses);
+                sort($classes);
+                if (implode(',', $classes) == implode(',', $matchClasses)) {
+                    $endpoints[$endpoint->getPath()] = $endpoint;
+                }
+            }
+        }
+
+        return $endpoints;
+    }
+
+    /**
      * @param $nodeId
      * @param $classes
      * @return EndpointFactory\NodeClassesEndpointFactory[]
@@ -500,11 +537,10 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             return $endpoints;
         }
 
-        $path = strtolower($node->urlAlias());
-        $pathParts = explode('/', $path);
-        $tag = array_shift($pathParts);
-        $path = '/' . $path;
+        $path = '/' . strtolower($node->urlAlias());
+        $tag = str_replace('/', '-', strtolower($node->urlAlias()));
 
+        $this->log("Create readonly endpoint $path for classes " . implode(', ', $classes));
         $endpoints[$path] = (new EndpointFactory\NodeClassesEndpointFactory($nodeId, $classes))
             ->setPath($path)
             ->addTag($tag)
@@ -521,5 +557,45 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             ]));
 
         return $endpoints;
+    }
+
+    private function appendToMiscEndpoints($classes)
+    {
+        if ($this->miscellanea === null) {
+            $endpoints = [];
+
+            $node = \eZContentObjectTreeNode::fetch(\eZINI::instance('content.ini')->variable('NodeSettings', 'RootNode'));
+
+            $path = '/miscellanea';
+            $tag = 'miscellanea';
+
+            $this->log("Create miscellanea readonly endpoint $path for classes " . implode(', ', $classes));
+            $endpoints[$path] = (new EndpointFactory\NodeClassesEndpointFactory($node->attribute('node_id'), $classes))
+                ->setPath($path)
+                ->addTag($tag)
+                ->setOperationFactoryCollection(new OperationFactoryCollection([
+                    (new OperationFactory\ContentObject\SearchOperationFactory()),
+                ]));
+
+            $path .= '/{id}';
+            $endpoints[$path] = (new EndpointFactory\NodeClassesEndpointFactory($node->attribute('node_id'), $classes))
+                ->setPath($path)
+                ->addTag($tag)
+                ->setOperationFactoryCollection(new OperationFactoryCollection([
+                    (new OperationFactory\ContentObject\ReadOperationFactory()),
+                ]));
+
+            $this->miscellanea = $endpoints;
+            foreach ($this->miscellanea as $path => $endpoint) {
+                $this->endpoints[$path] = $endpoint;
+            }
+        }else{
+            foreach ($this->miscellanea as $endpoint) {
+                $this->log("Append to node endpoint {$endpoint->getPath()} classes " . implode(', ', $classes));
+                $endpoint->appendClassIdentifierList((array)$classes);
+            }
+        }
+
+        return $this->miscellanea;
     }
 }

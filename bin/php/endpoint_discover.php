@@ -12,7 +12,10 @@ $script = eZScript::instance( array( 'description' => ( "OpenContent OpenApi end
 
 $script->startup();
 
-$options = $script->getOptions();
+$options = $script->getOptions( "[print-table]",
+    "",
+    ['print-table' => "Print role table"]
+);
 $script->initialize();
 $script->setUseDebugAccumulators( true );
 
@@ -21,7 +24,7 @@ $endpoints = $discover->getEndpointFactoryCollection();
 
 $rows = $endpoints;
 
-if (!empty($rows)) {
+if (!empty($rows) && $options['print-table']) {
     $table = new ezcConsoleTable(new ezcConsoleOutput(), 300);
     $headers = array_keys($rows[0]->toArray());
     foreach ($headers as $cell) {

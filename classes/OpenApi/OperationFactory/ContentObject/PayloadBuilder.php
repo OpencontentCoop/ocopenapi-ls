@@ -10,5 +10,7 @@ class PayloadBuilder extends \Opencontent\Opendata\Rest\Client\PayloadBuilder
 
     const TRANSLATE = 3;
 
+    const PATCH = 4;
+
     public $action;
 }

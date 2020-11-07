@@ -3,6 +3,8 @@
 namespace Opencontent\OpenApi\OperationFactory\ContentObject;
 
 use Opencontent\OpenApi\EndpointFactory;
+use Opencontent\OpenApi\Exceptions\NotFoundException;
+use Opencontent\OpenApi\Exceptions\OutOfRangeException;
 use Opencontent\Opendata\Api\ContentRepository;
 use Opencontent\Opendata\Api\ContentSearch;
 
@@ -44,5 +46,36 @@ trait ContentRepositoryTrait
         }
 
         return $this->searchRepository;
+    }
+
+    /**
+     * @param $endpointFactory
+     * @param $requestId
+     * @return \Opencontent\Opendata\Api\Values\Content|array
+     * @throws NotFoundException
+     * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
+     */
+    public function getResource($endpointFactory, $requestId)
+    {
+        try {
+            $search = $this->getSearchRepository($endpointFactory);
+            $query = [];
+            $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
+            $query[] = 'subtree [' . $endpointFactory->getNodeId() . ']';
+            $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
+            $query[] = 'raw[meta_remote_id_ms] = \'' . $requestId . '\'';
+            $query[] = 'limit 1';
+            $query[] = 'offset 0';
+            $query = implode(' and ', $query);
+
+            $searchResult = $search->search($query);
+            if ($searchResult->totalCount > 0){
+                return $searchResult->searchHits[0];
+            }else{
+                throw new NotFoundException($requestId);
+            }
+        }catch (OutOfRangeException $e){
+            throw new NotFoundException($requestId, $e);
+        }
     }
 }

@@ -43,6 +43,8 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
      */
     private $language;
 
+    private $payloadAction = PayloadBuilder::UPDATE;
+
     /**
      * OpenApiEnvironmentSettings constructor.
      * @param $parentNodeId
@@ -108,6 +110,11 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         return $schemaFactory;
     }
 
+    public function setIsPatch()
+    {
+        $this->payloadAction = PayloadBuilder::PATCH;
+    }
+
     /**
      * @param $data
      * @return ContentUpdateStruct
@@ -124,8 +131,8 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 
         $payloadBuilder = new PayloadBuilder();
 
-        $payloadBuilder->action = PayloadBuilder::UPDATE;
-        $payloadBuilder->setOption('update_null_field', true); // is put not patch!
+        $payloadBuilder->action = $this->payloadAction;
+        $payloadBuilder->setOption('update_null_field', $this->payloadAction == PayloadBuilder::UPDATE);
 
         $payloadBuilder->setClassIdentifier($schemaFactory->getClassIdentifier());
         $payloadBuilder->setParentNode($this->parentNodeId);
@@ -149,11 +156,13 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
                     $schemaFactory->serializePayload($payloadBuilder, $localizedPayload, $this->language);
                 }
             }
-            $payloadBuilder->action = PayloadBuilder::UPDATE;
+            $payloadBuilder->action = $this->payloadAction;
             $this->language = $currentLanguage;
         }
         $payloadBuilder->setLanguages($allLanguages);
         $payloadArray = $payloadBuilder->getArrayCopy();
+
+        $this->payloadAction = PayloadBuilder::UPDATE;
 
         return new ContentUpdateStruct(
             new MetadataStruct($payloadArray['metadata']),

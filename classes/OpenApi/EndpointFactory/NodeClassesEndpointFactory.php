@@ -67,7 +67,7 @@ class NodeClassesEndpointFactory extends EndpointFactory
      * @param mixed $classIdentifierList
      * @return NodeClassesEndpointFactory
      */
-    public function setClassIdentifierList($classIdentifierList)
+    private function setClassIdentifierList(array $classIdentifierList)
     {
         foreach ($classIdentifierList as $index => $classIdentifier){
             if (!\eZContentClass::classIDByIdentifier($classIdentifier)){
@@ -76,11 +76,12 @@ class NodeClassesEndpointFactory extends EndpointFactory
             }
         }
         $this->classIdentifierList = $classIdentifierList;
+        $this->provideSchemaFactories(true);
+
         if ($this->operationFactoryCollection instanceof OperationFactoryCollection){
             $this->operationFactoryCollection->setSchemaFactories($this->provideSchemaFactories());
         }
         $this->id = $this->generateId();
-        $this->provideSchemaFactories(true);
 
         return $this;
     }
