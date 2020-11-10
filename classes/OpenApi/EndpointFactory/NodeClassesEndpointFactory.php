@@ -4,6 +4,7 @@ namespace Opencontent\OpenApi\EndpointFactory;
 
 use Opencontent\OpenApi\EndpointFactory;
 use Opencontent\OpenApi\Logger;
+use Opencontent\OpenApi\OperationFactory;
 use Opencontent\OpenApi\OperationFactoryCollection;
 use Opencontent\OpenApi\SchemaFactory;
 
@@ -15,26 +16,19 @@ class NodeClassesEndpointFactory extends EndpointFactory
     protected $nodeId;
 
     protected $classIdentifierList;
-
-    private $schemaFactories;
-
     /**
      * @var string
      */
     protected $roleName;
 
+    private $schemaFactories;
+
+    private $originalPath;
+
     public function __construct($nodeId, array $classIdentifierList)
     {
         $this->nodeId = (int)$nodeId;
         $this->classIdentifierList = $classIdentifierList;
-    }
-
-    /**
-     * @return int
-     */
-    public function getNodeId()
-    {
-        return (int)$this->nodeId;
     }
 
     /**
@@ -56,37 +50,6 @@ class NodeClassesEndpointFactory extends EndpointFactory
     }
 
     /**
-     * @return mixed
-     */
-    public function getClassIdentifierList()
-    {
-        return $this->classIdentifierList;
-    }
-
-    /**
-     * @param mixed $classIdentifierList
-     * @return NodeClassesEndpointFactory
-     */
-    private function setClassIdentifierList(array $classIdentifierList)
-    {
-        foreach ($classIdentifierList as $index => $classIdentifier){
-            if (!\eZContentClass::classIDByIdentifier($classIdentifier)){
-                Logger::instance()->error("Class not found", ['identifier' => $classIdentifier, 'method' => __METHOD__]);
-                unset($classIdentifierList[$index]);
-            }
-        }
-        $this->classIdentifierList = $classIdentifierList;
-        $this->provideSchemaFactories(true);
-
-        if ($this->operationFactoryCollection instanceof OperationFactoryCollection){
-            $this->operationFactoryCollection->setSchemaFactories($this->provideSchemaFactories());
-        }
-        $this->id = $this->generateId();
-
-        return $this;
-    }
-
-    /**
      * @param mixed $classIdentifierList
      * @return NodeClassesEndpointFactory
      */
@@ -98,12 +61,39 @@ class NodeClassesEndpointFactory extends EndpointFactory
     }
 
     /**
+     * @param mixed $classIdentifierList
+     * @return NodeClassesEndpointFactory
+     */
+    private function setClassIdentifierList(array $classIdentifierList)
+    {
+        foreach ($classIdentifierList as $index => $classIdentifier) {
+            if (!\eZContentClass::classIDByIdentifier($classIdentifier)) {
+                Logger::instance()->error("Class not found", ['identifier' => $classIdentifier, 'method' => __METHOD__]);
+                unset($classIdentifierList[$index]);
+            }
+        }
+        $this->classIdentifierList = $classIdentifierList;
+        $this->provideSchemaFactories(true);
+        $this->id = $this->generateId();
+        if ($this->operationFactoryCollection instanceof OperationFactoryCollection) {
+            $this->operationFactoryCollection
+                ->setOperationsId(function ($operationFactory) {
+                    return $operationFactory->getName() . $this->getId();
+                })
+                ->setSchemaFactories($this->provideSchemaFactories());
+        }
+        $this->getPath();
+
+        return $this;
+    }
+
+    /**
      * @param bool $refresh
      * @return SchemaFactory[]
      */
     public function provideSchemaFactories($refresh = false)
     {
-        if ($refresh){
+        if ($refresh) {
             $this->schemaFactories = null;
         }
         if ($this->schemaFactories === null) {
@@ -116,20 +106,25 @@ class NodeClassesEndpointFactory extends EndpointFactory
         return $this->schemaFactories;
     }
 
-    public function getPath()
+    /**
+     * @return mixed
+     */
+    public function getClassIdentifierList()
     {
-        $this->provideSchemaFactories();
-        if (count($this->schemaFactories) === 1){
-            $this->path = str_replace('{id}', '{' . $this->schemaFactories[0]->getItemIdLabel() . '}', $this->path);
-        }
-
-        return $this->path;
+        return $this->classIdentifierList;
     }
-
 
     protected function generateId()
     {
         return 'Node' . $this->getNodeId() . 'Classes' . implode('-', $this->getClassIdentifierList());
+    }
+
+    /**
+     * @return int
+     */
+    public function getNodeId()
+    {
+        return (int)$this->nodeId;
     }
 
     public function serialize()
@@ -142,5 +137,23 @@ class NodeClassesEndpointFactory extends EndpointFactory
             'classIdentifierList' => $this->getClassIdentifierList(),
             'operationFactoryCollection' => $this->operationFactoryCollection,
         ]);
+    }
+
+    public function setPath($path)
+    {
+        if ($this->originalPath === null){
+            $this->originalPath = $path;
+        }
+        return parent::setPath($path);
+    }
+    public function getPath()
+    {
+        $this->path = $this->originalPath;
+        $this->provideSchemaFactories();
+        if (count($this->schemaFactories) === 1) {
+            $this->path = str_replace('{id}', '{' . $this->schemaFactories[0]->getItemIdLabel() . '}', $this->originalPath);
+        }
+
+        return $this->path;
     }
 }

@@ -21,6 +21,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
      */
     private $endpoints;
 
+    /**
+     * @var EndpointFactory\NodeClassesEndpointFactory[]
+     */
     private $miscellanea;
 
     public function __construct(\eZCLI $cli = null)
