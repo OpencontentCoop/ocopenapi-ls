@@ -11,11 +11,11 @@ class OpenApiAuthenticationEzFilter extends ezcAuthenticationFilter
     public function run($credentials)
     {
         if ($credentials instanceof ezcAuthenticationIdCredentials) {
-            SensorApiAuthUser::setLoggedUser(eZUser::instance($credentials->id));
+            OpenApiAuthUser::setLoggedUser(eZUser::instance($credentials->id));
             return self::STATUS_OK;
         }
         //echo '<pre>';var_dump(SensorApiAuthUser::authUser($credentials->id, $credentials->password));die();
-        if (SensorApiAuthUser::authUser($credentials->id, $credentials->password)) {
+        if (OpenApiAuthUser::authUser($credentials->id, $credentials->password)) {
             return self::STATUS_OK;
         }
 
@@ -24,7 +24,7 @@ class OpenApiAuthenticationEzFilter extends ezcAuthenticationFilter
 
 }
 
-class SensorApiAuthUser extends eZUser
+class OpenApiAuthUser extends eZUser
 {
     public static function setLoggedUser(eZUser $user)
     {
