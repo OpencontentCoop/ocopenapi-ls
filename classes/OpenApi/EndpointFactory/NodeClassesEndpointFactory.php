@@ -23,7 +23,7 @@ class NodeClassesEndpointFactory extends EndpointFactory
 
     private $schemaFactories;
 
-    private $originalPath;
+    public $originalPath;
 
     public function __construct($nodeId, array $classIdentifierList)
     {
@@ -133,6 +133,7 @@ class NodeClassesEndpointFactory extends EndpointFactory
             'id' => $this->getId(),
             'enabled' => $this->isEnabled(),
             'path' => $this->getPath(),
+            'originalPath' => $this->originalPath,
             'nodeId' => $this->getNodeId(),
             'classIdentifierList' => $this->getClassIdentifierList(),
             'operationFactoryCollection' => $this->operationFactoryCollection,
@@ -146,6 +147,7 @@ class NodeClassesEndpointFactory extends EndpointFactory
         }
         return parent::setPath($path);
     }
+
     public function getPath()
     {
         $this->path = $this->originalPath;
