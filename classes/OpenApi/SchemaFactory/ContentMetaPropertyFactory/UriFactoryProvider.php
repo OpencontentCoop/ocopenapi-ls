@@ -51,7 +51,7 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
     {
         if ($this->getContextEndpoint() instanceof NodeClassesEndpointFactory){
             $resourceEndpointPath = $this->getContextEndpoint()->getPath();
-            if (strpos('{', $resourceEndpointPath) !== false) {
+            if (strpos($resourceEndpointPath, '{') !== false) {
                 $resourceEndpointPathParts = explode('/', $resourceEndpointPath);
                 array_pop($resourceEndpointPathParts);
                 $resourceEndpointPath =  implode('/', $resourceEndpointPathParts);
