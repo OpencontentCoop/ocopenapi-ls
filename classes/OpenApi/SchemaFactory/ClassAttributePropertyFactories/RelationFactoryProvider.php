@@ -19,6 +19,7 @@ class RelationFactoryProvider extends ContentClassAttributePropertyFactory
     {
         parent::__construct($class, $attribute);
 
+        /** @var array $classContent */
         $classContent = $this->attribute->content();
         $this->selectionType = (int)$classContent['selection_type'];
         $this->defaultPlacement = $classContent['default_selection_node'] ? $classContent['default_selection_node'] : null;

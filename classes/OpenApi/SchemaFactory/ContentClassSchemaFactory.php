@@ -3,6 +3,7 @@
 namespace Opencontent\OpenApi\SchemaFactory;
 
 use erasys\OpenApi\Spec\v3 as OA;
+use Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory;
 use Opencontent\OpenApi\SchemaFactory;
 use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
@@ -13,10 +14,31 @@ class ContentClassSchemaFactory extends SchemaFactory
 
     protected $serializer;
 
+    /**
+     * @var NodeClassesEndpointFactory
+     */
+    protected $contextEndpoint;
+
     public function __construct($classIdentifier)
     {
         $this->classIdentifier = $classIdentifier;
         $this->name = $this->toCamelCase($classIdentifier);
+    }
+
+    /**
+     * @return NodeClassesEndpointFactory
+     */
+    public function getContextEndpoint()
+    {
+        return $this->contextEndpoint;
+    }
+
+    /**
+     * @param NodeClassesEndpointFactory $contextEndpoint
+     */
+    public function setContextEndpoint($contextEndpoint)
+    {
+        $this->contextEndpoint = $contextEndpoint;
     }
 
     protected function getSerializer()
@@ -24,6 +46,7 @@ class ContentClassSchemaFactory extends SchemaFactory
         if ($this->serializer === null){
             $this->serializer = new ContentClassSchemaSerializer();
         }
+        $this->serializer->setContextEndpoint($this->getContextEndpoint());
 
         return $this->serializer;
     }

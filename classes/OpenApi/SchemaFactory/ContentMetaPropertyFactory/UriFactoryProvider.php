@@ -49,6 +49,17 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
 
     private function getResourceEndpointPathForClassIdentifier($classIdentifier, $parentNode, $pathArray)
     {
+        if ($this->getContextEndpoint() instanceof NodeClassesEndpointFactory){
+            $resourceEndpointPath = $this->getContextEndpoint()->getPath();
+            if (strpos('{', $resourceEndpointPath) !== false) {
+                $resourceEndpointPathParts = explode('/', $resourceEndpointPath);
+                array_pop($resourceEndpointPathParts);
+                $resourceEndpointPath =  implode('/', $resourceEndpointPathParts);
+            }
+
+            return Loader::instance()->getSettingsProvider()->provideSettings()->endpointUrl . $resourceEndpointPath . '/';
+        }
+
         if (!isset(self::$resourceEndpointPaths[$classIdentifier.$parentNode])) {
             self::$resourceEndpointPaths[$classIdentifier.$parentNode] = '/';
             $endpoint = Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection()->findOneByCallback(function ($endpoint) use ($classIdentifier, $pathArray) {

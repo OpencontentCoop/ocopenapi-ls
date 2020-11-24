@@ -2,6 +2,7 @@
 
 namespace Opencontent\OpenApi\SchemaFactory;
 
+use Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory;
 use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 
@@ -11,10 +12,31 @@ class ContentClassAttributePropertyFactory
 
     protected $attribute;
 
+    /**
+     * @var NodeClassesEndpointFactory
+     */
+    protected $contextEndpoint;
+
     public function __construct(\eZContentClass $class, \eZContentClassAttribute $attribute)
     {
         $this->class = $class;
         $this->attribute = $attribute;
+    }
+
+    /**
+     * @return NodeClassesEndpointFactory
+     */
+    public function getContextEndpoint()
+    {
+        return $this->contextEndpoint;
+    }
+
+    /**
+     * @param NodeClassesEndpointFactory $contextEndpoint
+     */
+    public function setContextEndpoint($contextEndpoint)
+    {
+        $this->contextEndpoint = $contextEndpoint;
     }
 
     public function providePropertyIdentifier()

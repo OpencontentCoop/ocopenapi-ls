@@ -23,7 +23,7 @@ trait ContentRepositoryTrait
     {
         if ($this->contentRepository === null) {
             $this->contentRepository = new ContentRepository();
-            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory->getNodeId(), $this->getSchemaFactories());
+            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories());
             $this->contentRepository->setEnvironment($currentEnvironment);
             $currentEnvironment->__set('request', $this->getCurrentRequest());
         }
@@ -40,7 +40,7 @@ trait ContentRepositoryTrait
     {
         if ($this->searchRepository === null) {
             $this->searchRepository = new ContentSearch();
-            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory->getNodeId(), $this->getSchemaFactories());
+            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories());
             $this->searchRepository->setEnvironment($currentEnvironment);
             $currentEnvironment->__set('request', $this->getCurrentRequest());
         }

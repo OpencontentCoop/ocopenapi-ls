@@ -45,17 +45,20 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 
     private $payloadAction = PayloadBuilder::UPDATE;
 
+    private $endpointFactory;
+
     /**
      * OpenApiEnvironmentSettings constructor.
-     * @param $parentNodeId
+     * @param \Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory $endpointFactory
      * @param ContentClassSchemaFactory[] $schemaFactories
      * @param null $language
      * @throws InvalidParameterException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
      */
-    public function __construct($parentNodeId, array $schemaFactories = [], $language = null)
+    public function __construct($endpointFactory, array $schemaFactories = [], $language = null)
     {
-        $this->parentNodeId = $parentNodeId;
+        $this->endpointFactory = $endpointFactory;
+        $this->parentNodeId = $endpointFactory->getNodeId();
         $this->schemaFactories = $schemaFactories;
         $this->language = $language ? $language : eZContentObject::defaultLanguage();
         if (!in_array($this->language, \eZContentLanguage::fetchLocaleList())) {
@@ -181,6 +184,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
     {
         $availableClasses = [];
         foreach ($this->schemaFactories as $schemaFactory) {
+            $schemaFactory->setContextEndpoint($this->endpointFactory);
             $availableClasses[] = $schemaFactory->getClassIdentifier();
             if ($schemaFactory->getClassIdentifier() == $content->metadata->classIdentifier) {
                 if (!isset($content->data[$this->language])) {

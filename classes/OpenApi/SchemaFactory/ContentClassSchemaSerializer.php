@@ -6,6 +6,7 @@ use erasys\OpenApi\Spec\v3 as OA;
 use eZContentClass;
 use eZContentClassAttribute;
 use eZINI;
+use Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory;
 use Opencontent\OpenApi\Exceptions\InvalidPayloadException;
 use Opencontent\OpenApi\Logger;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
@@ -26,6 +27,27 @@ class ContentClassSchemaSerializer
     private static $metas = [];
 
     private static $properties = [];
+
+    /**
+     * @var NodeClassesEndpointFactory
+     */
+    protected $contextEndpoint;
+
+    /**
+     * @return NodeClassesEndpointFactory
+     */
+    public function getContextEndpoint()
+    {
+        return $this->contextEndpoint;
+    }
+
+    /**
+     * @param NodeClassesEndpointFactory $contextEndpoint
+     */
+    public function setContextEndpoint($contextEndpoint)
+    {
+        $this->contextEndpoint = $contextEndpoint;
+    }
 
     public function generateSchema($classIdentifier, $schemaName)
     {
@@ -75,7 +97,7 @@ class ContentClassSchemaSerializer
     /**
      * @param eZContentClass $class
      * @param string $schemaName
-     * @return ContentClassAttributePropertyFactory[]
+     * @return ContentClassAttributePropertyFactory[]|ContentMetaPropertyFactory[]
      */
     private function loadFactories(eZContentClass $class, $schemaName)
     {
@@ -266,6 +288,7 @@ class ContentClassSchemaSerializer
         $factories = $this->loadFactories($class, $schemaName);
         $value = [];
         foreach ($factories as $identifier => $factory) {
+            $factory->setContextEndpoint($this->getContextEndpoint());
             $value[$identifier] = $factory->serializeValue($content, $locale);
         }
 
