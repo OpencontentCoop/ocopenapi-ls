@@ -167,6 +167,10 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 
         $this->payloadAction = PayloadBuilder::UPDATE;
 
+        if (!isset($payloadArray['data'])){
+            $payloadArray['data'] = array_fill_keys($allLanguages, []);
+        }
+
         return new ContentUpdateStruct(
             new MetadataStruct($payloadArray['metadata']),
             new ContentDataStruct($payloadArray['data']),
