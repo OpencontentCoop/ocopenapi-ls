@@ -416,11 +416,24 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                         $relationsPath = $endpoint->getPath() . '/' . $identifier;
                         $relationsPathItem = $relationsPath . '/{relatedItemId}';
 
-                        if (isset($this->endpoints[$relationsPath]) && $this->endpoints[$relationsPath] instanceof EndpointFactory\RelationsEndpointFactory){
+                        $relationsPathEndpoint = $relationsPathEndpointItem = null;
+                        if (isset($this->endpoints[$relationsPath]) && $this->endpoints[$relationsPath] instanceof EndpointFactory\RelationsEndpointFactory) {
+                            $relationsPathEndpoint = $this->endpoints[$relationsPath];
+                            if ($this->endpoints[$relationsPathItem] instanceof EndpointFactory\RelationsEndpointFactory) {
+                                $relationsPathEndpointItem = $this->endpoints[$relationsPathItem];
+                            }
+                        }elseif (isset($endpoints[$relationsPath]) && $endpoints[$relationsPath] instanceof EndpointFactory\RelationsEndpointFactory) {
+                            $relationsPathEndpoint = $endpoints[$relationsPath];
+                            if ($endpoints[$relationsPathItem] instanceof EndpointFactory\RelationsEndpointFactory) {
+                                $relationsPathEndpointItem = $endpoints[$relationsPathItem];
+                            }
+                        }
+
+                        if ($relationsPathEndpoint instanceof EndpointFactory\RelationsEndpointFactory){
                             $this->log("Append to relation endpoint $relationsPath the attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
-                            $this->endpoints[$relationsPath]->appendClassAttributeId($classAttribute->attribute('id'));
-                            if ($this->endpoints[$relationsPathItem] instanceof EndpointFactory\RelationsEndpointFactory){
-                                $this->endpoints[$relationsPathItem]->appendClassAttributeId($classAttribute->attribute('id'));
+                            $relationsPathEndpoint->appendClassAttributeId($classAttribute->attribute('id'));
+                            if ($relationsPathEndpointItem instanceof EndpointFactory\RelationsEndpointFactory){
+                                $relationsPathEndpointItem->appendClassAttributeId($classAttribute->attribute('id'));
                             }
 
                         }else {

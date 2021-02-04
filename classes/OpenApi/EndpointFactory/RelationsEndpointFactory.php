@@ -73,9 +73,7 @@ class RelationsEndpointFactory extends EndpointFactory implements ChildEndpointF
     public function getPath()
     {
         $schemaFactories = $this->provideSchemaFactories();
-        if (count($schemaFactories) === 1) {
-            $this->path = str_replace('{relatedItemId}', '{' . $schemaFactories[0]->getItemIdLabel() . '}', $this->path);
-        }
+        $this->path = str_replace('{relatedItemId}', '{' . $schemaFactories[0]->getItemIdLabel() . '}', $this->path);
 
         return $this->path;
     }
@@ -85,7 +83,12 @@ class RelationsEndpointFactory extends EndpointFactory implements ChildEndpointF
      */
     public function provideSchemaFactories()
     {
-        return [new RelationsSchemaFactory($this->classAttributeId)];
+        $schemas = [];
+        foreach (explode(',', $this->classAttributeId) as $classAttributeId){
+            $schemas[] = new RelationsSchemaFactory($classAttributeId);
+        }
+
+        return $schemas;
     }
 
     protected function generateId()
