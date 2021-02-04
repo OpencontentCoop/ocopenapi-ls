@@ -2,6 +2,19 @@
 
 namespace Opencontent\OpenApi\EndpointDiscover;
 
+use eZCharTransform;
+use eZCLI;
+use eZContentClass;
+use eZContentClassAttribute;
+use eZContentObjectTreeNode;
+use eZINI;
+use eZMatrixType;
+use eZObjectRelationListType;
+use eZPolicy;
+use eZPolicyLimitation;
+use eZPolicyLimitationValue;
+use eZRole;
+use OCMultiBinaryType;
 use Opencontent\OpenApi\EndpointFactory;
 use Opencontent\OpenApi\EndpointFactoryCollection;
 use Opencontent\OpenApi\EndpointFactoryProvider;
@@ -10,7 +23,6 @@ use Opencontent\OpenApi\OperationFactory;
 use Opencontent\OpenApi\OperationFactoryCollection;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaSerializer;
-use Opencontent\Opendata\Api\ContentSearch;
 
 class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 {
@@ -26,7 +38,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
      */
     private $miscellanea;
 
-    public function __construct(\eZCLI $cli = null)
+    public function __construct(eZCLI $cli = null)
     {
         $this->cli = $cli;
     }
@@ -45,7 +57,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             foreach ($this->endpoints as $endpoint) {
                 $path = $endpoint->getPath();
                 $path = str_replace('{', 'aaa', $path);
-                $sortKey = \eZCharTransform::instance()->transformByGroup($path, 'identifier');
+                $sortKey = eZCharTransform::instance()->transformByGroup($path, 'identifier');
                 $sort[$sortKey] = $endpoint;
             }
             ksort($sort);
@@ -57,26 +69,26 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 
     private function discoverFromRoles()
     {
-        /** @var \eZRole[] $roles */
-        $roles = \eZRole::fetchList();
+        /** @var eZRole[] $roles */
+        $roles = eZRole::fetchList();
         foreach ($roles as $role) {
             $this->log($role->attribute('name'), 'warning');
-            /** @var \eZPolicy $policy */
+            /** @var eZPolicy $policy */
             foreach ($role->policyList() as $policy) {
                 if ($policy->attribute('module_name') == 'content' && $policy->attribute('function_name') == 'create') {
 
-                    /** @var \eZContentObjectTreeNode[] $subtree */
+                    /** @var eZContentObjectTreeNode[] $subtree */
                     $subtree = [];
                     $classes = [];
                     $parentClasses = [];
 
-                    /** @var \eZPolicyLimitation $limitation */
+                    /** @var eZPolicyLimitation $limitation */
                     foreach ($policy->limitationList() as $limitation) {
                         if ($limitation->attribute('identifier') == 'Node') {
-                            /** @var \eZPolicyLimitationValue $value */
+                            /** @var eZPolicyLimitationValue $value */
                             foreach ($limitation->valueList() as $value) {
-                                $node = \eZContentObjectTreeNode::fetch($value->attribute('value'));
-                                if ($node instanceof \eZContentObjectTreeNode) {
+                                $node = eZContentObjectTreeNode::fetch($value->attribute('value'));
+                                if ($node instanceof eZContentObjectTreeNode) {
                                     $this->log('  (node) ' . $node->urlAlias());
                                     $subtree[$node->attribute('node_id')] = $node;
                                 } else {
@@ -85,10 +97,10 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             }
                         }
                         if ($limitation->attribute('identifier') == 'Subtree') {
-                            /** @var \eZPolicyLimitationValue $value */
+                            /** @var eZPolicyLimitationValue $value */
                             foreach ($limitation->valueList() as $value) {
-                                $node = \eZContentObjectTreeNode::fetchByPath($value->attribute('value'));
-                                if ($node instanceof \eZContentObjectTreeNode) {
+                                $node = eZContentObjectTreeNode::fetchByPath($value->attribute('value'));
+                                if ($node instanceof eZContentObjectTreeNode) {
                                     $this->log('  (subtree) ' . $node->urlAlias());
                                     $subtree[$node->attribute('node_id')] = $node;
                                 } else {
@@ -97,9 +109,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             }
                         }
                         if ($limitation->attribute('identifier') == 'Class') {
-                            /** @var \eZPolicyLimitationValue $value */
+                            /** @var eZPolicyLimitationValue $value */
                             foreach ($limitation->valueList() as $value) {
-                                $classIdentifier = \eZContentClass::classIdentifierByID($value->attribute('value'));
+                                $classIdentifier = eZContentClass::classIdentifierByID($value->attribute('value'));
                                 if ($classIdentifier) {
                                     $classes[] = $classIdentifier;
                                     $this->log('  (class) ' . $classIdentifier);
@@ -109,9 +121,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             }
                         }
                         if ($limitation->attribute('identifier') == 'ParentClass') {
-                            /** @var \eZPolicyLimitationValue $value */
+                            /** @var eZPolicyLimitationValue $value */
                             foreach ($limitation->valueList() as $value) {
-                                $classIdentifier = \eZContentClass::classIdentifierByID($value->attribute('value'));
+                                $classIdentifier = eZContentClass::classIdentifierByID($value->attribute('value'));
                                 if ($classIdentifier) {
                                     $parentClasses[] = $classIdentifier;
                                     $this->log('  (parent) ' . $classIdentifier);
@@ -183,7 +195,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                         }
 
                         foreach ($pathGroup as $pathGroupItem) {
-                            /** @var \eZContentObjectTreeNode $node */
+                            /** @var eZContentObjectTreeNode $node */
                             foreach ($pathGroupItem['nodes'] as $node) {
                                 $path = '/' . strtolower($node->urlAlias()) . $pathGroupItem['path_suffix'];
                                 $tag = str_replace('/', '-', strtolower($node->urlAlias()));
@@ -231,7 +243,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 
     private function log($message, $level = null)
     {
-        if ($this->cli instanceof \eZCLI) {
+        if ($this->cli instanceof eZCLI) {
             switch ($level) {
                 case 'error';
                     $this->cli->error($message);
@@ -252,62 +264,16 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
         }
     }
 
-    private function createMultiBinarySubEndpoints($endpoint, $operation)
-    {
-        $endpoints = [];
-        foreach ($operation->getSchemaFactories() as $schema) {
-            if ($schema instanceof ContentClassSchemaFactory) {
-                $class = \eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
-                /** @var \eZContentClassAttribute $classAttribute */
-                foreach ($class->dataMap() as $classAttribute) {
-
-                    if ($classAttribute->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING) {
-
-                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
-                            $class,
-                            $classAttribute
-                        )->providePropertyIdentifier();
-
-                        $multiBinaryPath = $endpoint->getPath() . '/' . $identifier;
-                        $this->log("Create multibinary endpoint $multiBinaryPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
-                        $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
-                            ->setPath($multiBinaryPath)
-                            ->setTags($endpoint->getTags())
-                            ->setParentEndpointFactory($endpoint)
-                            ->setParentOperationFactory($operation)
-                            ->setOperationFactoryCollection((new OperationFactoryCollection([
-                                (new OperationFactory\MultiBinary\CreateOperationFactory()),
-                                (new OperationFactory\MultiBinary\ListOperationFactory()),
-                            ])));
-
-                        $multiBinaryPath = $multiBinaryPath . '/{multiBinaryFilename}';
-                        $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
-                            ->setPath($multiBinaryPath)
-                            ->setTags($endpoint->getTags())
-                            ->setParentEndpointFactory($endpoint)
-                            ->setParentOperationFactory($operation)
-                            ->setOperationFactoryCollection((new OperationFactoryCollection([
-                                (new OperationFactory\MultiBinary\ReadOperationFactory()),
-                                (new OperationFactory\MultiBinary\UpdateOperationFactory()),
-                                (new OperationFactory\MultiBinary\DeleteOperationFactory()),
-                            ])));
-                    }
-                }
-            }
-        }
-        return $endpoints;
-    }
-
     private function createMatrixSubEndpoints($endpoint, $operation)
     {
         $endpoints = [];
         foreach ($operation->getSchemaFactories() as $schema) {
             if ($schema instanceof ContentClassSchemaFactory) {
-                $class = \eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
-                /** @var \eZContentClassAttribute $classAttribute */
+                $class = eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
+                /** @var eZContentClassAttribute $classAttribute */
                 foreach ($class->dataMap() as $classAttribute) {
 
-                    if ($classAttribute->attribute('data_type_string') == \eZMatrixType::DATA_TYPE_STRING) {
+                    if ($classAttribute->attribute('data_type_string') == eZMatrixType::DATA_TYPE_STRING) {
 
                         $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
                             $class,
@@ -351,103 +317,114 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 
         foreach ($operation->getSchemaFactories() as $schema) {
             if ($schema instanceof ContentClassSchemaFactory) {
-                $class = \eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
-                /** @var \eZContentClassAttribute $classAttribute */
+                $class = eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
+                /** @var eZContentClassAttribute $classAttribute */
                 foreach ($class->dataMap() as $classAttribute) {
 
-                    if ($classAttribute->attribute('data_type_string') == \eZObjectRelationListType::DATA_TYPE_STRING) {
+                    if ($classAttribute->attribute('data_type_string') == eZObjectRelationListType::DATA_TYPE_STRING) {
                         /** @var array $classContent */
                         $classContent = $classAttribute->content();
 
 //                        if ($classContent['selection_type'] == 0) {
 
-                            $relatedEndpoints = [];
-                            if (isset($classContent['default_placement']['node_id']) && (int)$classContent['default_placement']['node_id'] > 0) {
-                                $relatedEndpoints = $this->findEndpointsByNodeId($classContent['default_placement']['node_id']);
+                        $relatedEndpoints = [];
+                        if (isset($classContent['default_placement']['node_id']) && (int)$classContent['default_placement']['node_id'] > 0) {
+                            $relatedEndpoints = $this->findEndpointsByNodeId($classContent['default_placement']['node_id']);
 
-                                if (isset($classContent['class_constraint_list']) && !empty($classContent['class_constraint_list'])) {
-                                    if (empty($relatedEndpoints)) {
-                                        $relatedEndpoints = $this->createReadOnlyEndpoints(
-                                            $classContent['default_placement']['node_id'],
-                                            $classContent['class_constraint_list']
-                                        );
-                                        if (!empty($relatedEndpoints)) {
-                                            foreach ($relatedEndpoints as $relatedReadOnlyEndpointPath => $relatedReadOnlyEndpoint) {
+                            if (isset($classContent['class_constraint_list']) && !empty($classContent['class_constraint_list'])) {
+                                if (empty($relatedEndpoints)) {
+                                    $relatedEndpoints = $this->createReadOnlyEndpoints(
+                                        $classContent['default_placement']['node_id'],
+                                        $classContent['class_constraint_list']
+                                    );
+                                    if (!empty($relatedEndpoints)) {
+                                        foreach ($relatedEndpoints as $relatedReadOnlyEndpointPath => $relatedReadOnlyEndpoint) {
 //                                                $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $classContent['default_placement']['node_id'] . ' ' .
 //                                                    implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
-                                                $this->endpoints[$relatedReadOnlyEndpointPath] = $relatedReadOnlyEndpoint;
-                                            }
+                                            $this->endpoints[$relatedReadOnlyEndpointPath] = $relatedReadOnlyEndpoint;
                                         }
-                                    } else {
-                                        foreach ($relatedEndpoints as $relatedEndpoint) {
-                                            $this->log("Append to node endpoint {$relatedEndpoint->getPath()} classes " . implode(', ', $classContent['class_constraint_list']));
-                                            $relatedEndpoint->appendClassIdentifierList((array)$classContent['class_constraint_list']);
-                                        }
+                                    }
+                                } else {
+                                    foreach ($relatedEndpoints as $relatedEndpoint) {
+                                        $this->log("Append to node endpoint {$relatedEndpoint->getPath()} classes " . implode(', ', $classContent['class_constraint_list']));
+                                        $relatedEndpoint->appendClassIdentifierList((array)$classContent['class_constraint_list']);
                                     }
                                 }
-                            }elseif (isset($classContent['class_constraint_list']) && !empty($classContent['class_constraint_list'])) {
+                            }
+                        } elseif (isset($classContent['class_constraint_list']) && !empty($classContent['class_constraint_list'])) {
 
-                                foreach ($classContent['class_constraint_list'] as $index => $classIndentifier){
-                                    if (!\eZContentClass::classIDByIdentifier($classIndentifier)){
-                                        Logger::instance()->error("Class not found", ['identifier' => $classIndentifier, 'method' => __METHOD__]);
-                                        unset($classContent['class_constraint_list'][$index]);
-                                    }
-                                }
-
-                                if (!empty($classContent['class_constraint_list'])) {
-
-                                    $relatedEndpoints = $this->findEndpointsByClasses($classContent['class_constraint_list']);
-                                    if (empty($relatedEndpoints)) {
-                                        //non è configurato un nodo predefinito: aggiungo a miscellanea
-                                        $relatedEndpoints = $this->appendToMiscEndpoints($classContent['class_constraint_list']);
-                                    }
-/*
-                                    //non è configurato un nodo predefinito: cerco di capire se tutti gli oggetti previsti sono sotto a un unico nodo
-                                    $contentSearch = new ContentSearch();
-                                    $contentSearch->setEnvironment(new \DefaultEnvironmentSettings());
-                                    $search = $contentSearch->search('classes [' . implode(',', $classContent['class_constraint_list']) . '] facets [raw[meta_main_parent_node_id_si]] limit 1');
-
-                                    //print_r([$classContent['class_constraint_list'],$search->facets[0]['data']]);
-
-                                    if (isset($search->facets[0]['data']) && count($search->facets[0]['data']) == 1){
-                                        $nodeIdList = array_keys($search->facets[0]['data']);
-                                        $nodeId = $nodeIdList[0];
-                                        $relatedEndpoints = $this->findEndpointsByNodeId($nodeId);
-                                        if (empty($relatedEndpoints)) {
-                                            $relatedEndpoints = $this->createReadOnlyEndpoints(
-                                                $nodeId,
-                                                $classContent['class_constraint_list']
-                                            );
-                                            if (!empty($relatedEndpoints)) {
-                                                foreach ($relatedEndpoints as $relatedReadOnlyEndpointPath => $relatedReadOnlyEndpoint) {
-//                                                    $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $nodeId . ' ' .
-//                                                        implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
-                                                    $this->endpoints[$relatedReadOnlyEndpointPath] = $relatedReadOnlyEndpoint;
-                                                }
-                                            }
-                                        } else {
-                                            foreach ($relatedEndpoints as $relatedEndpoint) {
-                                                $this->log("Append to node endpoint {$relatedEndpoint->getPath()} classes " . implode(', ', $classContent['class_constraint_list']));
-                                                $relatedEndpoint->appendClassIdentifierList((array)$classContent['class_constraint_list']);
-                                            }
-                                        }
-                                    }
-*/
+                            foreach ($classContent['class_constraint_list'] as $index => $classIndentifier) {
+                                if (!eZContentClass::classIDByIdentifier($classIndentifier)) {
+                                    Logger::instance()->error("Class not found", ['identifier' => $classIndentifier, 'method' => __METHOD__]);
+                                    unset($classContent['class_constraint_list'][$index]);
                                 }
                             }
 
-                            $relatedEndpoint = null;
-                            if (!empty($relatedEndpoints)) {
-                                $relatedEndpoint = array_pop($relatedEndpoints);
-                                //$this->log($relatedEndpoint->getPath(), 'warning');
+                            if (!empty($classContent['class_constraint_list'])) {
+
+                                $relatedEndpoints = $this->findEndpointsByClasses($classContent['class_constraint_list']);
+                                if (empty($relatedEndpoints)) {
+                                    //non è configurato un nodo predefinito: aggiungo a miscellanea
+                                    $relatedEndpoints = $this->appendToMiscEndpoints($classContent['class_constraint_list']);
+                                }
+                                /*
+                                                                    //non è configurato un nodo predefinito: cerco di capire se tutti gli oggetti previsti sono sotto a un unico nodo
+                                                                    $contentSearch = new ContentSearch();
+                                                                    $contentSearch->setEnvironment(new \DefaultEnvironmentSettings());
+                                                                    $search = $contentSearch->search('classes [' . implode(',', $classContent['class_constraint_list']) . '] facets [raw[meta_main_parent_node_id_si]] limit 1');
+
+                                                                    //print_r([$classContent['class_constraint_list'],$search->facets[0]['data']]);
+
+                                                                    if (isset($search->facets[0]['data']) && count($search->facets[0]['data']) == 1){
+                                                                        $nodeIdList = array_keys($search->facets[0]['data']);
+                                                                        $nodeId = $nodeIdList[0];
+                                                                        $relatedEndpoints = $this->findEndpointsByNodeId($nodeId);
+                                                                        if (empty($relatedEndpoints)) {
+                                                                            $relatedEndpoints = $this->createReadOnlyEndpoints(
+                                                                                $nodeId,
+                                                                                $classContent['class_constraint_list']
+                                                                            );
+                                                                            if (!empty($relatedEndpoints)) {
+                                                                                foreach ($relatedEndpoints as $relatedReadOnlyEndpointPath => $relatedReadOnlyEndpoint) {
+                                //                                                    $this->log($class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . ' ' . $nodeId . ' ' .
+                                //                                                        implode(',', $classContent['class_constraint_list']) . ' ' . $relatedReadOnlyEndpoint->getPath(), 'error');
+                                                                                    $this->endpoints[$relatedReadOnlyEndpointPath] = $relatedReadOnlyEndpoint;
+                                                                                }
+                                                                            }
+                                                                        } else {
+                                                                            foreach ($relatedEndpoints as $relatedEndpoint) {
+                                                                                $this->log("Append to node endpoint {$relatedEndpoint->getPath()} classes " . implode(', ', $classContent['class_constraint_list']));
+                                                                                $relatedEndpoint->appendClassIdentifierList((array)$classContent['class_constraint_list']);
+                                                                            }
+                                                                        }
+                                                                    }
+                                */
+                            }
+                        }
+
+                        $relatedEndpoint = null;
+                        if (!empty($relatedEndpoints)) {
+                            $relatedEndpoint = array_pop($relatedEndpoints);
+                            //$this->log($relatedEndpoint->getPath(), 'warning');
+                        }
+
+                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
+                            $class,
+                            $classAttribute
+                        )->providePropertyIdentifier();
+
+                        $relationsPath = $endpoint->getPath() . '/' . $identifier;
+                        $relationsPathItem = $relationsPath . '/{relatedItemId}';
+
+                        if (isset($this->endpoints[$relationsPath]) && $this->endpoints[$relationsPath] instanceof EndpointFactory\RelationsEndpointFactory){
+                            $this->log("Append to relation endpoint $relationsPath the attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
+                            $this->endpoints[$relationsPath]->appendClassAttributeId($classAttribute->attribute('id'));
+                            if ($this->endpoints[$relationsPathItem] instanceof EndpointFactory\RelationsEndpointFactory){
+                                $this->endpoints[$relationsPathItem]->appendClassAttributeId($classAttribute->attribute('id'));
                             }
 
-                            $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
-                                $class,
-                                $classAttribute
-                            )->providePropertyIdentifier();
+                        }else {
 
-                            $relationsPath = $endpoint->getPath() . '/' . $identifier;
                             $this->log("Create relation endpoint $relationsPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
                             $endpoints[$relationsPath] = (new EndpointFactory\RelationsEndpointFactory($classAttribute->attribute('id')))
                                 ->setPath($relationsPath)
@@ -463,9 +440,8 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 $endpoints[$relationsPath]->setRelatedEndpoint($relatedEndpoint);
                             }
 
-                            $relationsPath = $relationsPath . '/{relatedItemId}';
-                            $endpoints[$relationsPath] = (new EndpointFactory\RelationsEndpointFactory($classAttribute->attribute('id')))
-                                ->setPath($relationsPath)
+                            $endpoints[$relationsPathItem] = (new EndpointFactory\RelationsEndpointFactory($classAttribute->attribute('id')))
+                                ->setPath($relationsPathItem)
                                 ->setTags($endpoint->getTags())
                                 ->setParentEndpointFactory($endpoint)
                                 ->setParentOperationFactory($operation)
@@ -476,8 +452,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 ])));
 
                             if ($relatedEndpoint instanceof EndpointFactory\NodeClassesEndpointFactory) {
-                                $endpoints[$relationsPath]->setRelatedEndpoint($relatedEndpoint);
+                                $endpoints[$relationsPathItem]->setRelatedEndpoint($relatedEndpoint);
                             }
+                        }
 //                        }
                     }
                 }
@@ -506,27 +483,6 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
     }
 
     /**
-     * @param string[] $classes
-     * @return EndpointFactory\NodeClassesEndpointFactory[]
-     */
-    private function findEndpointsByClasses($classes)
-    {
-        $endpoints = [];
-        foreach ($this->endpoints as $endpoint) {
-            if ($endpoint instanceof EndpointFactory\NodeClassesEndpointFactory) {
-                $matchClasses = $endpoint->getClassIdentifierList();
-                sort($matchClasses);
-                sort($classes);
-                if (implode(',', $classes) == implode(',', $matchClasses)) {
-                    $endpoints[$endpoint->getPath()] = $endpoint;
-                }
-            }
-        }
-
-        return $endpoints;
-    }
-
-    /**
      * @param $nodeId
      * @param $classes
      * @return EndpointFactory\NodeClassesEndpointFactory[]
@@ -535,8 +491,8 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
     {
         $endpoints = [];
 
-        $node = \eZContentObjectTreeNode::fetch($nodeId);
-        if (!$node instanceof \eZContentObjectTreeNode) {
+        $node = eZContentObjectTreeNode::fetch($nodeId);
+        if (!$node instanceof eZContentObjectTreeNode) {
             return $endpoints;
         }
 
@@ -562,12 +518,33 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
         return $endpoints;
     }
 
+    /**
+     * @param string[] $classes
+     * @return EndpointFactory\NodeClassesEndpointFactory[]
+     */
+    private function findEndpointsByClasses($classes)
+    {
+        $endpoints = [];
+        foreach ($this->endpoints as $endpoint) {
+            if ($endpoint instanceof EndpointFactory\NodeClassesEndpointFactory) {
+                $matchClasses = $endpoint->getClassIdentifierList();
+                sort($matchClasses);
+                sort($classes);
+                if (implode(',', $classes) == implode(',', $matchClasses)) {
+                    $endpoints[$endpoint->getPath()] = $endpoint;
+                }
+            }
+        }
+
+        return $endpoints;
+    }
+
     private function appendToMiscEndpoints($classes)
     {
         if ($this->miscellanea === null) {
             $endpoints = [];
 
-            $node = \eZContentObjectTreeNode::fetch(\eZINI::instance('content.ini')->variable('NodeSettings', 'RootNode'));
+            $node = eZContentObjectTreeNode::fetch(eZINI::instance('content.ini')->variable('NodeSettings', 'RootNode'));
 
             $path = '/miscellanea';
             $tag = 'miscellanea';
@@ -592,7 +569,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             foreach ($this->miscellanea as $path => $endpoint) {
                 $this->endpoints[$path] = $endpoint;
             }
-        }else{
+        } else {
             foreach ($this->miscellanea as $endpoint) {
                 $this->log("Append to node endpoint {$endpoint->getPath()} classes " . implode(', ', $classes));
                 $endpoint->appendClassIdentifierList((array)$classes);
@@ -600,5 +577,51 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
         }
 
         return $this->miscellanea;
+    }
+
+    private function createMultiBinarySubEndpoints($endpoint, $operation)
+    {
+        $endpoints = [];
+        foreach ($operation->getSchemaFactories() as $schema) {
+            if ($schema instanceof ContentClassSchemaFactory) {
+                $class = eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
+                /** @var eZContentClassAttribute $classAttribute */
+                foreach ($class->dataMap() as $classAttribute) {
+
+                    if ($classAttribute->attribute('data_type_string') == OCMultiBinaryType::DATA_TYPE_STRING) {
+
+                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
+                            $class,
+                            $classAttribute
+                        )->providePropertyIdentifier();
+
+                        $multiBinaryPath = $endpoint->getPath() . '/' . $identifier;
+                        $this->log("Create multibinary endpoint $multiBinaryPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
+                        $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
+                            ->setPath($multiBinaryPath)
+                            ->setTags($endpoint->getTags())
+                            ->setParentEndpointFactory($endpoint)
+                            ->setParentOperationFactory($operation)
+                            ->setOperationFactoryCollection((new OperationFactoryCollection([
+                                (new OperationFactory\MultiBinary\CreateOperationFactory()),
+                                (new OperationFactory\MultiBinary\ListOperationFactory()),
+                            ])));
+
+                        $multiBinaryPath = $multiBinaryPath . '/{multiBinaryFilename}';
+                        $endpoints[$multiBinaryPath] = (new EndpointFactory\MultiBinaryEndpointFactory($classAttribute->attribute('id')))
+                            ->setPath($multiBinaryPath)
+                            ->setTags($endpoint->getTags())
+                            ->setParentEndpointFactory($endpoint)
+                            ->setParentOperationFactory($operation)
+                            ->setOperationFactoryCollection((new OperationFactoryCollection([
+                                (new OperationFactory\MultiBinary\ReadOperationFactory()),
+                                (new OperationFactory\MultiBinary\UpdateOperationFactory()),
+                                (new OperationFactory\MultiBinary\DeleteOperationFactory()),
+                            ])));
+                    }
+                }
+            }
+        }
+        return $endpoints;
     }
 }

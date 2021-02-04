@@ -22,6 +22,16 @@ class RelationsEndpointFactory extends EndpointFactory implements ChildEndpointF
         $this->classAttributeId = $classAttributeId;
     }
 
+    public function appendClassAttributeId($classAttributeId)
+    {
+        $this->classAttributeId .= ',' . $classAttributeId;
+    }
+
+    public function hasClassAttributeId($classAttributeId)
+    {
+        return in_array($classAttributeId, explode(',', $this->classAttributeId));
+    }
+
     /**
      * @return NodeClassesEndpointFactory
      */

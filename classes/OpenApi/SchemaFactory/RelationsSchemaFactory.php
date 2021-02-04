@@ -70,7 +70,7 @@ class RelationsSchemaFactory extends AbstractClassAttributeSchemaFactory
             $endpoint = Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection()->findOneByCallback(function ($endpoint) use($classAttributeId) {
                 if ($endpoint instanceof RelationsEndpointFactory) {
                     if ($endpoint->getOperationByMethod('get') instanceof ReadOperationFactory
-                        && $endpoint->getClassAttributeId() == $classAttributeId) {
+                        && $endpoint->hasClassAttributeId($classAttributeId)) {
                         return true;
                     }
                 }
