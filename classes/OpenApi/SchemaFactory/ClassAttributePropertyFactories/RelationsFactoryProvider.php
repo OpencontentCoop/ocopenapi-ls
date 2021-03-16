@@ -157,12 +157,13 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
             if ($attribute instanceof \eZContentObjectAttribute) {
                 $attributeContent = $attribute->content();
                 foreach ($attributeContent['relation_list'] as $relation) {
-                    $uri = RelationsSchemaFactory::getResourceEndpointPath($this->attribute->attribute('id')) . $relation['contentobject_remote_id'];
+                    $remoteId = $this->getRemoteIdByObjectId($relation['contentobject_id']);
+                    $uri = RelationsSchemaFactory::getResourceEndpointPath($this->attribute->attribute('id')) . $remoteId;
                     if (isset($nameList[$relation['contentobject_id']])) {
                         $uri .= '#' . \eZCharTransform::instance()->transformByGroup($nameList[$relation['contentobject_id']], 'urlalias');
                     }
                     $list[] = [
-                        'id' => $relation['contentobject_remote_id'],
+                        'id' => $remoteId,
                         'uri' => $uri,
                         'priority' => (int)$relation['priority']
                     ];
@@ -222,5 +223,17 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
         }
 
         throw new NotFoundException($remoteId);
+    }
+
+    private function getRemoteIdByObjectId($objectId)
+    {
+        $whereSql = "ezcontentobject.id = " . intval($objectId);
+        $fetchSQLString = "SELECT ezcontentobject.remote_id FROM ezcontentobject WHERE $whereSql";
+        $resArray = \eZDB::instance()->arrayQuery($fetchSQLString);
+        if (count($resArray) == 1 && $resArray !== false) {
+            return $resArray[0]['remote_id'];
+        }
+
+        throw new NotFoundException($objectId);
     }
 }
