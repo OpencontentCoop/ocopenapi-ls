@@ -23,6 +23,12 @@ trait SchemaReferenceGeneratorTrait
             ]);
         }
 
+        if (!isset($schemaFactories[0])){
+            //@todo use Logger
+            \eZLog::write("Missing schema references in " . get_called_class() . "#" . $this->name, 'openapi.log');
+            return '';
+        }
+
         return new OA\Reference('#/components/schemas/' . $schemaFactories[0]->getName());
     }
 

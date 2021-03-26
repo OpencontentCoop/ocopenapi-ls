@@ -137,6 +137,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 
                     $classes = array_unique($classes);
 
+                    if (empty($classes)){
+                        continue;
+                    }
 
                     foreach ($subtree as $item) {
 

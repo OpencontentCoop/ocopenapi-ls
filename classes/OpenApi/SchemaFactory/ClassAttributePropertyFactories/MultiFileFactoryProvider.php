@@ -40,11 +40,13 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
     {
         $content = $this->getContent($content, $locale);
         $data = [];
-        foreach ($content as $item) {
-            $data[] = [
-                'filename' => $item['filename'],
-                'uri' => $item['url'],
-            ];
+        if (is_array($content)) {
+            foreach ($content as $item) {
+                $data[] = [
+                    'filename' => $item['filename'],
+                    'uri' => $item['url'],
+                ];
+            }
         }
 
         return $data;
