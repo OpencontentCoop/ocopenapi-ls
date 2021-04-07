@@ -18,7 +18,7 @@ trait SchemaBuilderToolsTrait
                 if ($language->attribute('locale') == 'ita-PA'){
                     continue;
                 }
-                self::$languageList[$language->attribute('locale')] = $language->localeObject()->attribute('http_locale_code');
+                self::$languageList[$language->attribute('locale')] = $language->localeObject()->HTTPLocaleCode;
             }
         }
 
