@@ -43,6 +43,7 @@ class MergePatchOperationFactory extends OperationFactory\MergePatchOperationFac
             throw new InvalidParameterException($this->getItemIdLabel(), $requestId);
         }
 
+        $this->getResource($endpointFactory, $requestId);
         $object = \eZContentObject::fetchByRemoteID($requestId);
         if (!$object instanceof \eZContentObject) {
             throw new NotFoundException($requestId);

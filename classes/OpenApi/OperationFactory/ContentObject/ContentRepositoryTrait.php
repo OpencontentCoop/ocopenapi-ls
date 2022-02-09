@@ -23,7 +23,7 @@ trait ContentRepositoryTrait
     {
         if ($this->contentRepository === null) {
             $this->contentRepository = new ContentRepository();
-            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories());
+            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories(), $this->getCurrentRequestLanguage());
             $this->contentRepository->setEnvironment($currentEnvironment);
             $currentEnvironment->__set('request', $this->getCurrentRequest());
         }
@@ -40,7 +40,7 @@ trait ContentRepositoryTrait
     {
         if ($this->searchRepository === null) {
             $this->searchRepository = new ContentSearch();
-            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories());
+            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories(), $this->getCurrentRequestLanguage());
             $this->searchRepository->setEnvironment($currentEnvironment);
             $currentEnvironment->__set('request', $this->getCurrentRequest());
         }
@@ -62,12 +62,14 @@ trait ContentRepositoryTrait
             $query = [];
             $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
             $query[] = 'subtree [' . $endpointFactory->getNodeId() . ']';
-            $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
+//            if ($this->getMethod() === 'get') {
+                $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
+//            }
             $query[] = 'raw[meta_remote_id_ms] = \'' . $requestId . '\'';
             $query[] = 'limit 1';
             $query[] = 'offset 0';
             $query = implode(' and ', $query);
-
+var_dump($query);die();
             $searchResult = $search->search($query);
             if ($searchResult->totalCount > 0){
                 return $searchResult->searchHits[0];

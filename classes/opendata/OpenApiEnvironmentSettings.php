@@ -1,11 +1,13 @@
 <?php
 
+use Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\Exceptions\InvalidPayloadException;
 use Opencontent\OpenApi\Exceptions\OutOfRangeException;
 use Opencontent\OpenApi\Exceptions\TranslationNotFoundException;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PublicationOptions as OpenApiPublicationOptions;
+use Opencontent\OpenApi\SchemaFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
 use Opencontent\Opendata\Api\EnvironmentSettings;
 use Opencontent\Opendata\Api\Exception\NotFoundException;
@@ -49,8 +51,8 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 
     /**
      * OpenApiEnvironmentSettings constructor.
-     * @param \Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory $endpointFactory
-     * @param ContentClassSchemaFactory[] $schemaFactories
+     * @param NodeClassesEndpointFactory $endpointFactory
+     * @param SchemaFactory[] $schemaFactories
      * @param null $language
      * @throws InvalidParameterException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
@@ -159,6 +161,9 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
                     $schemaFactory->serializePayload($payloadBuilder, $localizedPayload, $this->language);
                 }
             }
+            if (!in_array($currentLanguage, $allLanguages)){
+                $allLanguages[] = $currentLanguage;
+            }
             $payloadBuilder->action = $this->payloadAction;
             $this->language = $currentLanguage;
         }
@@ -192,6 +197,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
             $availableClasses[] = $schemaFactory->getClassIdentifier();
             if ($schemaFactory->getClassIdentifier() == $content->metadata->classIdentifier) {
                 if (!isset($content->data[$this->language])) {
+                    eZDebug::writeDebug(print_r($content, 1));
                     throw new TranslationNotFoundException($content->metadata->remoteId, $this->language);
                 }
                 $value = $schemaFactory->serializeValue($content, $this->language);
