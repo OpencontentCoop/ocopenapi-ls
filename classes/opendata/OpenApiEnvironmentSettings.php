@@ -7,6 +7,7 @@ use Opencontent\OpenApi\Exceptions\OutOfRangeException;
 use Opencontent\OpenApi\Exceptions\TranslationNotFoundException;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PublicationOptions as OpenApiPublicationOptions;
+use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 use Opencontent\OpenApi\SchemaFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
 use Opencontent\Opendata\Api\EnvironmentSettings;
@@ -63,7 +64,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         $this->parentNodeId = $endpointFactory->getNodeId();
         $this->schemaFactories = $schemaFactories;
         $this->language = $language ? $language : eZContentObject::defaultLanguage();
-        if (!in_array($this->language, \eZContentLanguage::fetchLocaleList())) {
+        if (!isset(SchemaBuilderToolsTrait::getLanguageList()[$this->language])) {
             throw new InvalidParameterException("language", $this->language);
         }
         parent::__construct();
@@ -197,7 +198,6 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
             $availableClasses[] = $schemaFactory->getClassIdentifier();
             if ($schemaFactory->getClassIdentifier() == $content->metadata->classIdentifier) {
                 if (!isset($content->data[$this->language])) {
-                    eZDebug::writeDebug(print_r($content, 1));
                     throw new TranslationNotFoundException($content->metadata->remoteId, $this->language);
                 }
                 $value = $schemaFactory->serializeValue($content, $this->language);

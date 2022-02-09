@@ -55,21 +55,21 @@ trait ContentRepositoryTrait
      * @throws NotFoundException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
      */
-    public function getResource($endpointFactory, $requestId)
+    public function getResource($endpointFactory, $requestId, $language = false)
     {
         try {
             $search = $this->getSearchRepository($endpointFactory);
             $query = [];
             $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
             $query[] = 'subtree [' . $endpointFactory->getNodeId() . ']';
-            if ($this->getMethod() === 'get') {
-                $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
+            if ($language) {
+                $query[] = 'raw[meta_language_code_ms] in [' . $language . ']';
             }
             $query[] = 'raw[meta_remote_id_ms] = \'' . $requestId . '\'';
             $query[] = 'limit 1';
             $query[] = 'offset 0';
             $query = implode(' and ', $query);
-//var_dump($query);die();
+
             $searchResult = $search->search($query);
             if ($searchResult->totalCount > 0){
                 return $searchResult->searchHits[0];

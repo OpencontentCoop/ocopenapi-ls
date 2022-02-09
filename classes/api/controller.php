@@ -35,6 +35,10 @@ class OpenApiController extends ezpRestMvcController
             \eZINI::instance('module.ini')->variable('ModuleSettings', 'ModuleRepositories')
         );
         eZDB::setErrorHandling(eZDB::ERROR_HANDLING_EXCEPTIONS);
+
+        eZINI::instance('ezfind.ini')->removeSetting('SearchFilters', 'RawFilterList');
+        eZINI::instance('ezfind.ini')->setVariable('LanguageSearch', 'SearchMainLanguageOnly', 'disabled');
+        eZINI::instance()->setVariable('RegionalSettings', 'ShowUntranslatedObjects', 'enabled');
     }
 
     public function doEndpoint()
@@ -61,6 +65,7 @@ class OpenApiController extends ezpRestMvcController
 
             header("X-Api-User: " . eZUser::currentUserID());
             header("X-Api-Operation: " . $operation->getId());
+            header("Cache-Control: private, no-cache, no-store, must-revalidate");
             return $result;
 
         } catch (Exception $e) {
