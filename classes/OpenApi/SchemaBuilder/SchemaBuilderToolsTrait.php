@@ -13,12 +13,9 @@ trait SchemaBuilderToolsTrait
     {
         if (self::$languageList === null) {
             self::$languageList = [];
-            $languages = \eZContentLanguage::fetchList();
+            $languages = \eZINI::instance()->variable('RegionalSettings', 'SiteLanguageList');
             foreach ($languages as $language) {
-                if ($language->attribute('locale') == 'ita-PA'){
-                    continue;
-                }
-                self::$languageList[$language->attribute('locale')] = $language->localeObject()->HTTPLocaleCode;
+                self::$languageList[$language] = \eZLocale::instance($language)->HTTPLocaleCode;
             }
         }
 

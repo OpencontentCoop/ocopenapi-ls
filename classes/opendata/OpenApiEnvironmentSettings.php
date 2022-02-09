@@ -1,11 +1,14 @@
 <?php
 
+use Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\Exceptions\InvalidPayloadException;
 use Opencontent\OpenApi\Exceptions\OutOfRangeException;
 use Opencontent\OpenApi\Exceptions\TranslationNotFoundException;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PublicationOptions as OpenApiPublicationOptions;
+use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
+use Opencontent\OpenApi\SchemaFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
 use Opencontent\Opendata\Api\EnvironmentSettings;
 use Opencontent\Opendata\Api\Exception\NotFoundException;
@@ -49,8 +52,8 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 
     /**
      * OpenApiEnvironmentSettings constructor.
-     * @param \Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory $endpointFactory
-     * @param ContentClassSchemaFactory[] $schemaFactories
+     * @param NodeClassesEndpointFactory $endpointFactory
+     * @param SchemaFactory[] $schemaFactories
      * @param null $language
      * @throws InvalidParameterException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
@@ -61,7 +64,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         $this->parentNodeId = $endpointFactory->getNodeId();
         $this->schemaFactories = $schemaFactories;
         $this->language = $language ? $language : eZContentObject::defaultLanguage();
-        if (!in_array($this->language, \eZContentLanguage::fetchLocaleList())) {
+        if (!isset(SchemaBuilderToolsTrait::getLanguageList()[$this->language])) {
             throw new InvalidParameterException("language", $this->language);
         }
         parent::__construct();
@@ -158,6 +161,9 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
                     $localizedPayload = $this->filterContent($content);
                     $schemaFactory->serializePayload($payloadBuilder, $localizedPayload, $this->language);
                 }
+            }
+            if (!in_array($currentLanguage, $allLanguages)){
+                $allLanguages[] = $currentLanguage;
             }
             $payloadBuilder->action = $this->payloadAction;
             $this->language = $currentLanguage;

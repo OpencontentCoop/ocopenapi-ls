@@ -40,7 +40,7 @@ class ReadOperationFactory extends OperationFactory\ReadOperationFactory
             throw new InvalidParameterException($this->getItemIdLabel(), $requestId);
         }
 
-        $result->variables = $this->getResource($endpointFactory, $requestId);
+        $result->variables = $this->getResource($endpointFactory, $requestId, $this->getCurrentRequestLanguage());
 
         return $result;
     }

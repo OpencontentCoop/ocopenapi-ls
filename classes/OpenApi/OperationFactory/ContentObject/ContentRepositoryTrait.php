@@ -23,7 +23,7 @@ trait ContentRepositoryTrait
     {
         if ($this->contentRepository === null) {
             $this->contentRepository = new ContentRepository();
-            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories());
+            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories(), $this->getCurrentRequestLanguage());
             $this->contentRepository->setEnvironment($currentEnvironment);
             $currentEnvironment->__set('request', $this->getCurrentRequest());
         }
@@ -40,7 +40,7 @@ trait ContentRepositoryTrait
     {
         if ($this->searchRepository === null) {
             $this->searchRepository = new ContentSearch();
-            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories());
+            $currentEnvironment = new \OpenApiEnvironmentSettings($endpointFactory, $this->getSchemaFactories(), $this->getCurrentRequestLanguage());
             $this->searchRepository->setEnvironment($currentEnvironment);
             $currentEnvironment->__set('request', $this->getCurrentRequest());
         }
@@ -55,14 +55,16 @@ trait ContentRepositoryTrait
      * @throws NotFoundException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
      */
-    public function getResource($endpointFactory, $requestId)
+    public function getResource($endpointFactory, $requestId, $language = false)
     {
         try {
             $search = $this->getSearchRepository($endpointFactory);
             $query = [];
             $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
             $query[] = 'subtree [' . $endpointFactory->getNodeId() . ']';
-            $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
+            if ($language) {
+                $query[] = 'raw[meta_language_code_ms] in [' . $language . ']';
+            }
             $query[] = 'raw[meta_remote_id_ms] = \'' . $requestId . '\'';
             $query[] = 'limit 1';
             $query[] = 'offset 0';
