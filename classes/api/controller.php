@@ -1,6 +1,7 @@
 <?php
 
 use Opencontent\OpenApi;
+use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 use Opencontent\Opendata\Api\Exception\BaseException;
 
 class OpenApiController extends ezpRestMvcController
@@ -66,6 +67,9 @@ class OpenApiController extends ezpRestMvcController
             header("X-Api-User: " . eZUser::currentUserID());
             header("X-Api-Operation: " . $operation->getId());
             header("Cache-Control: private, no-cache, no-store, must-revalidate");
+            $languages = SchemaBuilderToolsTrait::getLanguageList();
+            header("Content-Language: " . $languages[$operation->getCurrentRequestLanguage()]);
+
             return $result;
 
         } catch (Exception $e) {
