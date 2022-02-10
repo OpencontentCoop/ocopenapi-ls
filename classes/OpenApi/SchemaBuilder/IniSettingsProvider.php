@@ -24,7 +24,6 @@ class IniSettingsProvider implements SettingsProviderInterface
             $settings->apiId = \eZSolr::installationID();
 
             $settings->debugEnabled = \eZINI::instance()->variable('DebugSettings', 'DebugOutput') == 'enabled';
-$settings->debugEnabled = true;
             $settings->cacheEnabled = true;
 
             if (\eZINI::instance('ocopenapi.ini')->hasVariable('GeneralSettings', 'RateLimit')) {
