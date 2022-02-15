@@ -35,6 +35,9 @@ class FileFactoryProvider extends ContentClassAttributePropertyFactory
     public function serializeValue(Content $content, $locale)
     {
         $content = $this->getContent($content, $locale);
+
+        if (empty($content['filename'])) return null;
+
         return [
             'filename' => $content['filename'],
             'uri' => $content['url'],

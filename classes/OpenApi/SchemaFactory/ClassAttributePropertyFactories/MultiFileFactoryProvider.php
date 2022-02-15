@@ -42,10 +42,12 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
         $data = [];
         if (is_array($content)) {
             foreach ($content as $item) {
-                $data[] = [
-                    'filename' => $item['filename'],
-                    'uri' => $item['url'],
-                ];
+                if (!empty($item['filename'])) {
+                    $data[] = [
+                        'filename' => $item['filename'],
+                        'uri' => $item['url'],
+                    ];
+                }
             }
         }
 
