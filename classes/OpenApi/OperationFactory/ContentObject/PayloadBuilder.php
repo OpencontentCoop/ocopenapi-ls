@@ -12,5 +12,25 @@ class PayloadBuilder extends \Opencontent\Opendata\Rest\Client\PayloadBuilder
 
     const PATCH = 4;
 
-    public $action;
+    private $actions = [];
+
+    public function isAction($action){
+        return isset($this->actions[$action]);
+    }
+
+    public function appendAction($action)
+    {
+        $this->actions[$action] = $action;
+    }
+
+    public function removeAction($action)
+    {
+        unset($this->actions[$action]);
+    }
+
+    public function setAction($action)
+    {
+        $this->actions = [];
+        $this->actions[$action] = $action;
+    }
 }

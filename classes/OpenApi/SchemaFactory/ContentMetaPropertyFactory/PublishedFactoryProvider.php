@@ -27,7 +27,7 @@ class PublishedFactoryProvider extends ContentMetaPropertyFactory
 
     public function serializePayload(PayloadBuilder $payloadBuilder, array $payload, $locale)
     {
-        if (!empty($payload[$this->providePropertyIdentifier()]) && $payloadBuilder->action != PayloadBuilder::TRANSLATE) {
+        if (!empty($payload[$this->providePropertyIdentifier()]) && !$payloadBuilder->isAction(PayloadBuilder::TRANSLATE)) {
             $timestamp = strtotime($payload[$this->providePropertyIdentifier()]);
             if ($timestamp) {
                 $payloadBuilder->setPublished($timestamp);

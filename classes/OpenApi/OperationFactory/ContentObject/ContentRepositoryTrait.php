@@ -71,10 +71,16 @@ trait ContentRepositoryTrait
             $query = implode(' and ', $query);
 
             $searchResult = $search->search($query);
+
+            $errorMessage = $requestId;
+            if ($language){
+                $errorMessage .= " in $language";
+            }
+
             if ($searchResult->totalCount > 0){
                 return $searchResult->searchHits[0];
             }else{
-                throw new NotFoundException($requestId);
+                throw new NotFoundException($errorMessage);
             }
         }catch (OutOfRangeException $e){
             throw new NotFoundException($requestId, $e);

@@ -80,7 +80,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         $schemaFactory = $this->discriminateSchemaFactory($data);
 
         $payloadBuilder = new PayloadBuilder();
-        $payloadBuilder->action = PayloadBuilder::CREATE;
+        $payloadBuilder->setAction(PayloadBuilder::CREATE);
         $payloadBuilder->setClassIdentifier($schemaFactory->getClassIdentifier());
         $payloadBuilder->setParentNode($this->parentNodeId);
         $payloadBuilder->setLanguages([$this->language]);
@@ -137,7 +137,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
 
         $payloadBuilder = new PayloadBuilder();
 
-        $payloadBuilder->action = $this->payloadAction;
+        $payloadBuilder->setAction($this->payloadAction);
         $payloadBuilder->setOption('update_null_field', $this->payloadAction == PayloadBuilder::UPDATE);
 
         $payloadBuilder->setClassIdentifier($schemaFactory->getClassIdentifier());
@@ -149,12 +149,14 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
             throw new NotFoundException($data['_id']);
         }
 
+        $payloadArray = $payloadBuilder->getArrayCopy();
+
         // handle translations
         $allLanguages = array_keys($object->allLanguages());
         if (count($allLanguages) > 1 || $allLanguages[0] !== $this->language) {
             $content = Content::createFromEzContentObject($object);
             $currentLanguage = $this->language;
-            $payloadBuilder->action = PayloadBuilder::TRANSLATE;
+            $payloadBuilder->appendAction(PayloadBuilder::TRANSLATE);
             foreach ($allLanguages as $language) {
                 if ($language != $currentLanguage) {
                     $this->language = $language;
@@ -162,19 +164,24 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
                     $schemaFactory->serializePayload($payloadBuilder, $localizedPayload, $this->language);
                 }
             }
-            if (!in_array($currentLanguage, $allLanguages)){
+            if (!in_array($currentLanguage, $allLanguages)) {
                 $allLanguages[] = $currentLanguage;
             }
-            $payloadBuilder->action = $this->payloadAction;
+            $payloadBuilder->removeAction(PayloadBuilder::TRANSLATE);
             $this->language = $currentLanguage;
         }
         $payloadBuilder->setLanguages($allLanguages);
         $payloadArray = $payloadBuilder->getArrayCopy();
 
         $this->payloadAction = PayloadBuilder::UPDATE;
-
         if (!isset($payloadArray['data'])){
             $payloadArray['data'] = array_fill_keys($allLanguages, []);
+        }else{
+            foreach ($allLanguages as $language){
+                if (!isset($payloadArray['data'][$language])){
+                    $payloadArray['data'][$language] = [];
+                }
+            }
         }
 
         return new ContentUpdateStruct(

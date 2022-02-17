@@ -30,7 +30,7 @@ class ModifiedFactoryProvider extends ContentMetaPropertyFactory
     public function serializePayload(PayloadBuilder $payloadBuilder, array $payload, $locale)
     {
         //is readonly!
-        if (!empty($payload[$this->providePropertyIdentifier()]) && $payloadBuilder->action != PayloadBuilder::TRANSLATE) {
+        if (!empty($payload[$this->providePropertyIdentifier()]) && !$payloadBuilder->isAction(PayloadBuilder::TRANSLATE)) {
             throw new InvalidPayloadException("Field {$this->providePropertyIdentifier()} is read only");
 //            $timestamp = strtotime($payload[$this->providePropertyIdentifier()]);
 //            if ($timestamp) {

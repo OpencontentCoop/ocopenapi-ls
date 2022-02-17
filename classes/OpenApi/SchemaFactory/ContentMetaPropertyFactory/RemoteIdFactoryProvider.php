@@ -15,16 +15,16 @@ class RemoteIdFactoryProvider extends ContentMetaPropertyFactory
 
     public function serializePayload(PayloadBuilder $payloadBuilder, array $payload, $locale)
     {
-        if ($payloadBuilder->action != PayloadBuilder::TRANSLATE) {
-            if (isset($payload['_id']) && ($payloadBuilder->action == PayloadBuilder::UPDATE || $payloadBuilder->action == PayloadBuilder::PATCH)) {
+        if (!$payloadBuilder->isAction(PayloadBuilder::TRANSLATE)) {
+            if (isset($payload['_id']) && ($payloadBuilder->isAction(PayloadBuilder::UPDATE) || $payloadBuilder->isAction(PayloadBuilder::PATCH))) {
                 $payloadBuilder->setId($payload['_id']);
             }
 
             if (isset($payload['id'])) {
-                if ($payloadBuilder->action == PayloadBuilder::CREATE) {
+                if ($payloadBuilder->isAction(PayloadBuilder::CREATE)) {
                     $payloadBuilder->setRemoteId($payload['id']);
 
-                } elseif ($payloadBuilder->action == PayloadBuilder::UPDATE || $payloadBuilder->action == PayloadBuilder::PATCH) {
+                } elseif ($payloadBuilder->isAction(PayloadBuilder::UPDATE) || $payloadBuilder->isAction(PayloadBuilder::PATCH)) {
 
                     $alreadyExists = \eZContentObject::fetchByRemoteID($payload['id']);
                     if ($alreadyExists instanceof \eZContentObject && (int)$alreadyExists->attribute('id') !== (int)$payload['_id']) {

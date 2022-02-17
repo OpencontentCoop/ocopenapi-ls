@@ -301,18 +301,25 @@ class ContentClassSchemaSerializer
         $factories = $this->loadFactories($class, $schemaName);
         $errors = [];
         foreach ($factories as $identifier => $factory) {
+            if ($factory instanceof ContentMetaPropertyFactory && $payloadBuilder->isAction(PayloadBuilder::TRANSLATE)){
+                continue;
+            }
             try {
                 if ($factory->isRequired()
                     && !isset($payload[$factory->providePropertyIdentifier()])
-                    && $payloadBuilder->action !== PayloadBuilder::PATCH) {
+                    && !$payloadBuilder->isAction(PayloadBuilder::PATCH)) {
                     throw new InvalidPayloadException($factory->providePropertyIdentifier(), 'field is required');
                 }
-                if ($factory->isRequired()
-                    && array_key_exists($factory->providePropertyIdentifier(), $payload)
+                $isEmpty = (
+                    array_key_exists($factory->providePropertyIdentifier(), $payload)
                     && ($payload[$factory->providePropertyIdentifier()] === null
                         || $payload[$factory->providePropertyIdentifier()] === ''
                         || $payload[$factory->providePropertyIdentifier()] === [])
-                ) {
+                );
+                if ($isEmpty && $payloadBuilder->isAction(PayloadBuilder::TRANSLATE)){
+                    continue;
+                }
+                if ($factory->isRequired() && $isEmpty) {
                     throw new InvalidPayloadException($factory->providePropertyIdentifier(), 'field can not be empty');
                 }
                 $factory->serializePayload($payloadBuilder, $payload, $locale);
