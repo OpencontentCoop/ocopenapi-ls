@@ -35,6 +35,10 @@ class OpenApiRailsRoute extends ezcMvcRailsRoute
      */
     public function matches(ezcMvcRequest $request)
     {
+        if ($request->protocol === 'http-options'){
+            $request->protocol = 'http-get';
+        }
+
         if ($this->match($request, $matches)) {
             if ($request->protocol === $this->protocol) {
                 $request->variables = array_merge($this->defaultValues, $request->variables, $matches);
