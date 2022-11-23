@@ -3,7 +3,6 @@
 namespace Opencontent\OpenApi\OperationFactory\ContentObject;
 
 use Opencontent\OpenApi\EndpointFactory;
-use Opencontent\OpenApi\Exception;
 use Opencontent\OpenApi\Exceptions\InternalException;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\OperationFactory;
@@ -33,6 +32,22 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
      */
     public function handleCurrentRequest(EndpointFactory $endpointFactory)
     {
+        $query = implode(' and ', $this->buildQueryParts($endpointFactory));
+        $search = $this->getSearchRepository($endpointFactory);
+        try {
+            $path = $endpointFactory->getBaseUri() . $endpointFactory->getPath();
+            $result = new \ezpRestMvcResult();
+            \eZINI::instance('ezfind.ini')->setVariable('LanguageSearch', 'SearchMainLanguageOnly', 'disabled');
+            $result->variables = $this->buildResult($search->search($query), $path);
+        } catch (\Exception $e) {
+            throw new InternalException($e->getMessage() . ' on ' . $query);
+        }
+
+        return $result;
+    }
+
+    protected function buildQueryParts($endpointFactory)
+    {
         $searchTerm = $this->getCurrentRequestParameter('searchTerm');
         $limit = (int)$this->getCurrentRequestParameter('limit');
         $offset = (int)$this->getCurrentRequestParameter('offset');
@@ -44,8 +59,6 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
             throw new InvalidParameterException('offset', $offset);
         }
 
-        $search = $this->getSearchRepository($endpointFactory);
-
         $query = [];
         if (!empty($searchTerm)) {
             $query[] = 'q = \'' . addcslashes($searchTerm, '\'()[]"') . '\'';
@@ -54,20 +67,11 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
         $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
         $query[] = 'subtree [' . $endpointFactory->getNodeId() . ']';
         $query[] = 'raw[meta_language_code_ms] in [' . $this->getCurrentRequestLanguage() . ']';
+        $query[] = 'sort [published=>desc]';
         $query[] = 'limit ' . $limit;
         $query[] = 'offset ' . $offset;
-        $query = implode(' and ', $query);
 
-        try {
-            $path = $endpointFactory->getBaseUri() . $endpointFactory->getPath();
-            $result = new \ezpRestMvcResult();
-            \eZINI::instance('ezfind.ini')->setVariable('LanguageSearch', 'SearchMainLanguageOnly', 'disabled');
-            $result->variables = $this->buildResult($search->search($query), $path);
-        } catch (\Exception $e) {
-            throw new InternalException($e->getMessage() . ' on ' . $query);
-        }
-
-        return $result;
+        return $query;
     }
 
     protected function buildResult(SearchResults $searchResults, $path)

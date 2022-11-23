@@ -120,7 +120,7 @@ class ContentClassSchemaSerializer
             }
 
             foreach ($metaFields as $identifier) {
-                $factory = self::loadContentMetaPropertyFactory($class, $identifier);
+                $factory = static::loadContentMetaPropertyFactory($class, $identifier);
                 if ($factory instanceof ContentMetaPropertyFactory) {
                     self::$factories[$class->attribute('identifier')][$schemaName][$factory->providePropertyIdentifier()] = $factory;
                 }

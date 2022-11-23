@@ -4,8 +4,14 @@ use Opencontent\OpenApi;
 
 class OpenApiProvider implements ezpRestProviderInterface
 {
+    private $routes;
+
     public function getRoutes()
     {
+        if ($this->routes !== null){
+            return $this->routes;
+        }
+
         $builder = OpenApi\Loader::instance()->getSchemaBuilder();
         $schema = $builder->build();
         $version = 1;
@@ -33,7 +39,9 @@ class OpenApiProvider implements ezpRestProviderInterface
         foreach ($patterns as $pattern) {
             $path = $paths[$pattern];
             foreach ($path as $method => $definition) {
-
+                if (!in_array(strtoupper($method), ['POST', 'GET', 'PUT', 'DELETE', 'PATCH']) || empty($definition)){
+                    continue;
+                }
                 $operationId = $definition['operationId'];
                 $defaultValues = ['operationId' => $operationId];
 
@@ -56,6 +64,7 @@ class OpenApiProvider implements ezpRestProviderInterface
                 ), $version);
             }
         }
+        $this->routes = $routes;
 
         return $routes;
     }

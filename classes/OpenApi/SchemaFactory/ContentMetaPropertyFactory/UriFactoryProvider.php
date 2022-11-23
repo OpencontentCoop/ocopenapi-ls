@@ -47,7 +47,7 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
             . '#' . \eZCharTransform::instance()->transformByGroup($content->metadata->name[$locale], 'urlalias');
     }
 
-    private function getResourceEndpointPathForClassIdentifier($classIdentifier, $parentNode, $pathArray)
+    protected function getResourceEndpointPathForClassIdentifier($classIdentifier, $parentNode, $pathArray)
     {
         if ($this->getContextEndpoint() instanceof NodeClassesEndpointFactory){
             $resourceEndpointPath = $this->getContextEndpoint()->getPath();

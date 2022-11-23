@@ -89,7 +89,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             foreach ($limitation->valueList() as $value) {
                                 $node = eZContentObjectTreeNode::fetch($value->attribute('value'));
                                 if ($node instanceof eZContentObjectTreeNode) {
-                                    $this->log('  (node) ' . $node->urlAlias());
+                                    $this->log('  (node) ' . $node->urlAlias(), 'warning');
                                     $subtree[$node->attribute('node_id')] = $node;
                                 } else {
                                     $this->log('  (node) ' . $value->attribute('value'), 'error');
@@ -101,7 +101,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             foreach ($limitation->valueList() as $value) {
                                 $node = eZContentObjectTreeNode::fetchByPath($value->attribute('value'));
                                 if ($node instanceof eZContentObjectTreeNode) {
-                                    $this->log('  (subtree) ' . $node->urlAlias());
+                                    $this->log('  (subtree) ' . $node->urlAlias(), 'warning');
                                     $subtree[$node->attribute('node_id')] = $node;
                                 } else {
                                     $this->log('  (subtree) ' . $value->attribute('value'), 'error');
@@ -114,7 +114,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 $classIdentifier = eZContentClass::classIdentifierByID($value->attribute('value'));
                                 if ($classIdentifier) {
                                     $classes[] = $classIdentifier;
-                                    $this->log('  (class) ' . $classIdentifier);
+                                    $this->log('  (class) ' . $classIdentifier, 'warning');
                                 } else {
                                     $this->log('  (class) ' . $value->attribute('value'), 'error');
                                 }
@@ -126,7 +126,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 $classIdentifier = eZContentClass::classIdentifierByID($value->attribute('value'));
                                 if ($classIdentifier) {
                                     $parentClasses[] = $classIdentifier;
-                                    $this->log('  (parent) ' . $classIdentifier);
+                                    $this->log('  (parent) ' . $classIdentifier, 'warning');
                                 } else {
                                     $this->log('  (parent) ' . $value->attribute('value'), 'error');
                                 }
@@ -218,7 +218,6 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                     }
                 }
             }
-            $this->log(' ');
         }
 
         foreach ($this->endpoints as $path => $endpoint) {
