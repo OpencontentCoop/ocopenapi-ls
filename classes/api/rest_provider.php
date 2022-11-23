@@ -29,14 +29,16 @@ class OpenApiProvider implements ezpRestProviderInterface
         // sort pattern by length
         $paths = $schema['paths'];
         $patterns = array_keys($paths);
-        usort($patterns, function ($a, $b){
+        usort($patterns, function ($patternA, $patternB){
+            $a = explode('{', $patternA)[0];
+            $b = explode('{', $patternB)[0];
             if (mb_strlen($a) == mb_strlen($b)) {
                 return 0;
             }
             return (mb_strlen($a) < mb_strlen($b)) ? 1 : -1;
         });
 
-        foreach ($patterns as $pattern) {
+        foreach ($patterns as $index => $pattern) {
             $path = $paths[$pattern];
             foreach ($path as $method => $definition) {
                 if (!in_array(strtoupper($method), ['POST', 'GET', 'PUT', 'DELETE', 'PATCH']) || empty($definition)){
@@ -55,7 +57,7 @@ class OpenApiProvider implements ezpRestProviderInterface
                     }
                 }
 
-                $routes['openApi' . ucfirst($operationId)] = new ezpRestVersionedRoute(new OpenApiRailsRoute(
+                $routes['openApi' . $index . ucfirst($operationId)] = new ezpRestVersionedRoute(new OpenApiRailsRoute(
                     $pattern,
                     'OpenApiController',
                     'action',
