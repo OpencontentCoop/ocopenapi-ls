@@ -48,7 +48,6 @@ class SearchOperationFactory extends SearchOperationFactoryBase
         $this->currentEndpointFactory = $endpointFactory;
         $query = parent::buildQueryParts($endpointFactory);
         array_unshift($query, "raw[meta_main_parent_node_id_si] = " . (int)$this->currentEndpointFactory->getNodeId());
-
         return $query;
     }
 
@@ -62,6 +61,4 @@ class SearchOperationFactory extends SearchOperationFactoryBase
 
         return $result;
     }
-
-
 }

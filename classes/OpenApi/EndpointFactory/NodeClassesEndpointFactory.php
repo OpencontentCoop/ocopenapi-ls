@@ -21,7 +21,7 @@ class NodeClassesEndpointFactory extends EndpointFactory
      */
     protected $roleName;
 
-    private $schemaFactories;
+    protected $schemaFactories;
 
     public $originalPath;
 

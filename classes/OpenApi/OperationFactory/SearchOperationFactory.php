@@ -49,7 +49,6 @@ class SearchOperationFactory extends GetOperationFactory
     {
         $properties = parent::generateOperationAdditionalProperties();
         $properties['parameters'] = $this->generateSearchParameters();
-
         return $properties;
     }
 

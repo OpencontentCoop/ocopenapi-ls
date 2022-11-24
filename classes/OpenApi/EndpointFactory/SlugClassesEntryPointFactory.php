@@ -4,6 +4,7 @@ namespace Opencontent\OpenApi\EndpointFactory;
 
 use Opencontent\OpenApi\Exceptions\NotFoundException;
 use Opencontent\OpenApi\SchemaFactory;
+use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaSerializer;
 
 class SlugClassesEntryPointFactory extends NodeClassesEndpointFactory
 {
@@ -13,10 +14,10 @@ class SlugClassesEntryPointFactory extends NodeClassesEndpointFactory
 
     protected $slugIdMap;
 
-    public function __construct($nodeParameter, array $classIdentifierList, $slugIdMap)
+    public function __construct($nodeParameter, array $classIdentifierList, array $slugIdMap, ContentClassSchemaSerializer $serializer)
     {
         $this->nodeParameter = $nodeParameter;
-        $this->serializer = new SchemaFactory\SlugClassesClassSchemaSerializer();
+        $this->serializer = $serializer;
         $this->slugIdMap = $slugIdMap;
         parent::__construct(null, $classIdentifierList);
     }

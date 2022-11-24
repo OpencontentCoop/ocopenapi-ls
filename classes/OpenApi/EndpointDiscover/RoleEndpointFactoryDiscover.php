@@ -268,48 +268,9 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
 
     private function createMatrixSubEndpoints($endpoint, $operation)
     {
-        $endpoints = [];
-        foreach ($operation->getSchemaFactories() as $schema) {
-            if ($schema instanceof ContentClassSchemaFactory) {
-                $class = eZContentClass::fetchByIdentifier($schema->getClassIdentifier());
-                /** @var eZContentClassAttribute $classAttribute */
-                foreach ($class->dataMap() as $classAttribute) {
-
-                    if ($classAttribute->attribute('data_type_string') == eZMatrixType::DATA_TYPE_STRING) {
-
-                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
-                            $class,
-                            $classAttribute
-                        )->providePropertyIdentifier();
-
-                        $matrixPath = $endpoint->getPath() . '/' . $identifier;
-                        $this->log("Create matrix endpoint $matrixPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier'));
-                        $endpoints[$matrixPath] = (new EndpointFactory\MatrixEndpointFactory($classAttribute->attribute('id')))
-                            ->setPath($matrixPath)
-                            ->setTags($endpoint->getTags())
-                            ->setParentEndpointFactory($endpoint)
-                            ->setParentOperationFactory($operation)
-                            ->setOperationFactoryCollection((new OperationFactoryCollection([
-                                (new OperationFactory\Matrix\CreateOperationFactory()),
-                                (new OperationFactory\Matrix\ListOperationFactory()),
-                            ])));
-
-                        $matrixPath = $matrixPath . '/{matrixItemId}';
-                        $endpoints[$matrixPath] = (new EndpointFactory\MatrixEndpointFactory($classAttribute->attribute('id')))
-                            ->setPath($matrixPath)
-                            ->setTags($endpoint->getTags())
-                            ->setParentEndpointFactory($endpoint)
-                            ->setParentOperationFactory($operation)
-                            ->setOperationFactoryCollection((new OperationFactoryCollection([
-                                (new OperationFactory\Matrix\ReadOperationFactory()),
-                                (new OperationFactory\Matrix\UpdateOperationFactory()),
-                                (new OperationFactory\Matrix\DeleteOperationFactory()),
-                            ])));
-                    }
-                }
-            }
-        }
-
+        $log = '';
+        $endpoints = Utils::createMatrixSubEndpoints($endpoint, $operation, $log);
+        $this->log($log);
         return $endpoints;
     }
 
