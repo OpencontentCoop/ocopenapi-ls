@@ -23,7 +23,7 @@ class Utils
         EndpointFactory\NodeClassesEndpointFactory $endpoint,
         OperationFactory\ContentObject\ReadOperationFactory $operation,
         string &$log = null
-    ): array {
+    ) {
         $endpoints = [];
         foreach ($operation->getSchemaFactories() as $schema) {
             if ($schema instanceof ContentClassSchemaFactory) {
