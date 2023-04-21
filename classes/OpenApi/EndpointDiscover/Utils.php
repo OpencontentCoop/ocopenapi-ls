@@ -22,7 +22,7 @@ class Utils
     public static function createMatrixSubEndpoints(
         EndpointFactory\NodeClassesEndpointFactory $endpoint,
         OperationFactory\ContentObject\ReadOperationFactory $operation,
-        string &$log = null
+        &$log = null
     ) {
         $endpoints = [];
         foreach ($operation->getSchemaFactories() as $schema) {
