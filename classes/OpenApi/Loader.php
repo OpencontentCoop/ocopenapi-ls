@@ -136,8 +136,23 @@ class Loader
     /**
      * @return SchemaBuilderInterface
      */
-    public function getSchemaBuilder()
+    public function getSchemaBuilder($filters = [])
     {
+        if (isset($filters['section'])){
+            $settings = $this->getSettingsProvider()->provideSettings();
+            if ($settings->hasDocumentationSection($filters['section'])){
+                $section = $settings->getDocumentationSection($filters['section']);
+                $tags = $section['tags'] ?? false;
+                if ($tags) {
+                    return new TagFilteredSchemaBuilder($this->schemaBuilder, $tags, $section['title']);
+                }
+            }
+        }elseif (isset($filters['tag'])){
+            $tags =  (array)$filters['tag'];
+            if (!empty($tags)){
+                return new TagFilteredSchemaBuilder($this->schemaBuilder, $tags);
+            }
+        }
         return $this->schemaBuilder;
     }
 

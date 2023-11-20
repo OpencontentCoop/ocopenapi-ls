@@ -44,7 +44,8 @@ class OpenApiController extends ezpRestMvcController
 
     public function doEndpoint()
     {
-        $schema = $this->apiLoader->getSchemaBuilder()->build()->toArray();
+        $builder = $this->apiLoader->getSchemaBuilder($this->request->get);
+        $schema = $builder->build()->toArray();
         $result = new ezpRestMvcResult();
         $result->variables = $schema;
 

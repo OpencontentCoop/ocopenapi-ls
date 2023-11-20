@@ -2,6 +2,8 @@
 
 namespace Opencontent\OpenApi\SchemaBuilder;
 
+use eZINI;
+
 class IniSettingsProvider implements SettingsProviderInterface
 {
     private $settings;
@@ -19,18 +21,28 @@ class IniSettingsProvider implements SettingsProviderInterface
             \eZURI::transformURI($endpointUrl, true, 'full');
             $settings->endpointUrl = $endpointUrl;
 
-            $settings->apiTitle = \eZINI::instance()->variable('SiteSettings', 'SiteName') . ' Rest Api';
+            $settings->apiTitle = eZINI::instance()->variable('SiteSettings', 'SiteName') . ' Rest Api';
             $settings->apiDescription = 'Web service to create and manage contents';
             $settings->apiId = \eZSolr::installationID();
 
-            $settings->debugEnabled = \eZINI::instance()->variable('DebugSettings', 'DebugOutput') == 'enabled';
+            $settings->debugEnabled = eZINI::instance()->variable('DebugSettings', 'DebugOutput') == 'enabled';
             $settings->cacheEnabled = true;
 
-            if (\eZINI::instance('ocopenapi.ini')->hasVariable('GeneralSettings', 'RateLimit')) {
-                $settings->rateLimitEnabled = \eZINI::instance('ocopenapi.ini')->variable('GeneralSettings', 'RateLimit') == 'enabled';
+            $ocopenapaIni = eZINI::instance('ocopenapi.ini');
+            if ($ocopenapaIni->hasVariable('GeneralSettings', 'RateLimit')) {
+                $settings->rateLimitEnabled = $ocopenapaIni->variable('GeneralSettings', 'RateLimit') == 'enabled';
             }
-            if (\eZINI::instance('ocopenapi.ini')->hasVariable('GeneralSettings', 'RateLimitDocumentation')) {
-                $settings->rateLimitDocumentationEnabled = \eZINI::instance('ocopenapi.ini')->variable('GeneralSettings', 'RateLimitDocumentation') == 'enabled';
+            if ($ocopenapaIni->hasVariable('GeneralSettings', 'RateLimitDocumentation')) {
+                $settings->rateLimitDocumentationEnabled = $ocopenapaIni->variable('GeneralSettings', 'RateLimitDocumentation') == 'enabled';
+            }
+
+            if ($ocopenapaIni->hasVariable('Documentation', 'WithSections') && $ocopenapaIni->variable('Documentation', 'WithSections') == 'enabled') {
+                $sections = (array)$ocopenapaIni->variable('Documentation', 'Sections');
+                foreach ($sections as $section){
+                    if ($ocopenapaIni->hasGroup('Section_' . $section)){
+                        $settings->documentationSections[$section] = $ocopenapaIni->group('Section_' . $section);
+                    }
+                }
             }
 
             $this->settings = $settings;

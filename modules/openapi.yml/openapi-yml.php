@@ -4,7 +4,7 @@ use Opencontent\OpenApi;
 
 try {
     header('HTTP/1.1 200 OK');
-    $builder = OpenApi\Loader::instance()->getSchemaBuilder();
+    $builder = OpenApi\Loader::instance()->getSchemaBuilder(eZHTTPTool::instance()->attribute('get'));
     $data = $builder->build()->toYaml(10);
     //$data = $builder->getEndpoints();
 } catch (Exception $e) {

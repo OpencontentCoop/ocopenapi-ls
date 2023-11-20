@@ -26,4 +26,16 @@ class Settings
     public $rateLimitEnabled;
 
     public $rateLimitDocumentationEnabled;
+
+    public $documentationSections = [];
+
+    public function hasDocumentationSection($name): bool
+    {
+        return isset($this->documentationSections[$name]);
+    }
+
+    public function getDocumentationSection($name): array
+    {
+        return $this->documentationSections[$name] ?? [];
+    }
 }

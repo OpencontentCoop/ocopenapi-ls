@@ -4,7 +4,7 @@ use Opencontent\OpenApi;
 
 try {
     header('HTTP/1.1 200 OK');
-    $data = OpenApi\Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection();;
+    $data = OpenApi\Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection();
     //$data = $builder->getEndpoints();
 } catch (Exception $e) {
     header('HTTP/1.1 500 Internal Server Error');

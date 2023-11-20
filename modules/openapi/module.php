@@ -8,7 +8,7 @@ $ViewList = [];
 $ViewList['doc'] = [
     'functions' => ['doc'],
     'script' => 'doc.php',
-    'params' => [],
+    'params' => ['Section'],
     'unordered_params' => [],
     "default_navigation_part" => 'ezsetupnavigationpart',
 ];
