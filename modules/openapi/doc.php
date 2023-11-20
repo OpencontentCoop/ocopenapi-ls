@@ -65,7 +65,7 @@ if (isset($_GET['debug'])) {
             ],
             [
                 'text' => $currentSection['title'],
-                'url' => '/openapi/doc/' . $section,
+                'url' => false,
                 'url_alias' => false,
             ],
         ];
