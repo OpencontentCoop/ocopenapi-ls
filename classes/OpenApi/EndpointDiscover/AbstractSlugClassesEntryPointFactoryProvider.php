@@ -28,7 +28,7 @@ abstract class AbstractSlugClassesEntryPointFactoryProvider extends EndpointFact
     {
         $prefix = $this->getPrefix();
         $classes = $this->getClassIdentifiers();
-        $nodeIdMap = $this->getSlugIdMap();
+        $nodeIdMap = (array)$this->getSlugIdMap();
         $tag = $this->getTag();
         $endpoints = [];
 

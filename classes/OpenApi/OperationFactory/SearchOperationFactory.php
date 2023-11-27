@@ -21,7 +21,7 @@ class SearchOperationFactory extends GetOperationFactory
             '200' => new OA\Response('Successful response.', [
                 'application/json' => new OA\MediaType([
                     'schema' => $this->generateSearchResultSchema()
-                ])
+                ]),
             ], $this->generateResponseHeaders()),
             '400' => new OA\Response('Invalid input provided.', null, $this->generateResponseHeaders(true)),
             '403' => new OA\Response('Forbidden', null, $this->generateResponseHeaders(true)),

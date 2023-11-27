@@ -76,15 +76,6 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
 
     protected function buildResult(SearchResults $searchResults, $path)
     {
-        $result = [
-            'items' => $searchResults->searchHits,
-            'self' => null,
-            'prev' => null,
-            'next' => null,
-            'count' => $searchResults->totalCount,
-//            'query' => $searchResults->query,
-        ];
-
         $parameters = [];
         foreach ($this->generateSearchParameters() as $parameter) {
             if ($this->getCurrentRequestParameter($parameter->name)) {
@@ -92,7 +83,14 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
             }
         }
 
-        $result['self'] = $path . '?' . http_build_query($parameters);
+        $result = [
+            'items' => $searchResults->searchHits,
+            'self' => $path . '?' . http_build_query($parameters),
+            'prev' => null,
+            'next' => null,
+            'count' => $searchResults->totalCount,
+//            'query' => $searchResults->query,
+        ];
 
         if ($searchResults->nextPageQuery) {
             $nextParameters = $parameters;

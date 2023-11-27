@@ -58,6 +58,7 @@ class ContentClassSchemaSerializer
             foreach ($factories as $identifier => $factory) {
                 $properties[$identifier] = $factory->provideProperties();
             }
+
             $requiredFields = [];
             foreach ($factories as $identifier => $factory) {
                 if ($factory->isRequired()) {
@@ -115,10 +116,15 @@ class ContentClassSchemaSerializer
                 $keys = array_keys(eZINI::instance('ocopenapi.ini')->variable('ContentMetaSettings', 'ContentMetaPropertyFactories'));
                 $classIdentifier = $class->attribute('identifier');
                 foreach ($keys as $field) {
-                    $metaFields[] = str_replace($classIdentifier . '/', '', $field);
+                    if (strpos($field, '/') !== false) {
+                        if (strpos($field, $class->attribute('identifier').'/') !== false) {
+                            $metaFields[] = str_replace($classIdentifier . '/', '', $field);
+                        }
+                    }else{
+                        $metaFields[] = $field;
+                    }
                 }
             }
-
             foreach ($metaFields as $identifier) {
                 $factory = static::loadContentMetaPropertyFactory($class, $identifier);
                 if ($factory instanceof ContentMetaPropertyFactory) {
@@ -154,9 +160,7 @@ class ContentClassSchemaSerializer
             }
 
             $customMetaPropertyFactory = 'null';
-
             $classIdentifier = $class->attribute('identifier');
-
             if (isset($settings['ContentMetaPropertyFactories'][$classIdentifier . '/' . $identifier])) {
                 $customMetaPropertyFactory = $settings['ContentMetaPropertyFactories'][$classIdentifier . '/' . $identifier];
             } elseif (isset($settings['ContentMetaPropertyFactories'][$identifier])) {
@@ -174,7 +178,6 @@ class ContentClassSchemaSerializer
                     $customMetaPropertyFactory = $defaults[$identifier];
                 }
             }
-
             if (class_exists($customMetaPropertyFactory)) {
                 self::$metas[$class->attribute('id') . $identifier] = new $customMetaPropertyFactory($class, $identifier);
             } else {
