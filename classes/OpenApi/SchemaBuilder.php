@@ -28,8 +28,10 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
      */
     private $endpoints;
 
-    public function __construct(SettingsProviderInterface $settingsProvider, EndpointFactoryProviderInterface $endpointProvider)
-    {
+    public function __construct(
+        SettingsProviderInterface $settingsProvider,
+        EndpointFactoryProviderInterface $endpointProvider
+    ) {
         $this->settings = $settingsProvider->provideSettings();
         $this->endpointProvider = $endpointProvider;
     }
@@ -60,6 +62,12 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
      */
     public function build()
     {
+        $security = [
+            ['basicAuth' => []],
+        ];
+        if ($this->settings->jwtAccessEnabled) {
+            $security[] = ['bearerAuth' => []];
+        }
         return new OA\Document(
             $this->buildInfo(),
             $this->buildPaths(),
@@ -68,7 +76,7 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
                 'servers' => $this->buildServers(),
                 'tags' => $this->buildTags(),
                 'components' => $this->buildComponents(),
-                'security' => [['basicAuth' => []]]
+                'security' => $security,
             ]
         );
     }
@@ -90,7 +98,10 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
             [
                 'termsOfService' => (string)$this->settings->termsOfServiceUrl,
                 'contact' => $contact,
-                'license' => new OA\License("GNU General Public License, version 2", "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"),
+                'license' => new OA\License(
+                    "GNU General Public License, version 2",
+                    "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+                ),
                 //@see https://opensource.zalando.com/restful-api-guidelines/#215
                 'xApiId' => new OpenApiBase\ExtensionProperty('api-id', (string)$this->settings->apiId),
                 //@see https://opensource.zalando.com/restful-api-guidelines/#219
@@ -166,6 +177,13 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
         $components->securitySchemes = [
             'basicAuth' => new OA\SecurityScheme('http', null, ['scheme' => 'basic']),
         ];
+        if ($this->settings->jwtAccessEnabled) {
+            $components->securitySchemes['bearerAuth'] = new OA\SecurityScheme(
+                'http',
+                null,
+                ['scheme' => 'bearer', 'bearerFormat' => 'JWT']
+            );
+        }
 
         $schemas = [];
         foreach ($this->getEndpointFactoryCollection() as $endpoint) {
@@ -180,21 +198,29 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
                             $schemas[\OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME] = new OA\Schema([
                                 "type" => "object",
                                 'properties' => [
-                                    \OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME => $this->generateSchemaProperty([
-                                        'type' => 'string',
-                                        'description' => 'Resource name'
-                                    ])
+                                    \OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME => $this->generateSchemaProperty(
+                                        [
+                                            'type' => 'string',
+                                            'description' => 'Resource name',
+                                        ]
+                                    ),
                                 ],
-                                'required' => [\OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME]
+                                'required' => [\OpenApiEnvironmentSettings::DISCRIMINATOR_PROPERTY_NAME],
                             ]);
                         }
                         foreach ($operationFactory->getSchemaFactories() as $schemaFactory) {
-                            if (!isset($schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName()])) {
-                                $schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName()] = new OA\Schema([
+                            if (!isset(
+                                $schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName(
+                                )]
+                            )) {
+                                $schemas[\OpenApiEnvironmentSettings::DISCRIMINATED_SCHEMA_PREFIX . $schemaFactory->getName(
+                                )] = new OA\Schema([
                                     'allOf' => [
-                                        new OA\Reference('#/components/schemas/' . \OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME),
+                                        new OA\Reference(
+                                            '#/components/schemas/' . \OpenApiEnvironmentSettings::DISCRIMINATOR_SCHEMA_NAME
+                                        ),
                                         new OA\Reference('#/components/schemas/' . $schemaFactory->getName()),
-                                    ]
+                                    ],
                                 ]);
                             }
                         }

@@ -25,6 +25,8 @@ class Settings
 
     public $rateLimitEnabled;
 
+    public $jwtAccessEnabled;
+
     public $rateLimitDocumentationEnabled;
 
     public $documentationSections = [];

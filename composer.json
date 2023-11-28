@@ -13,7 +13,8 @@
     "require": {
         "ezsystems/ezpublish-legacy-installer": "*",
         "erasys/openapi-php": "*",
-        "opencontent/ocopendata-ls": "*"
+        "opencontent/ocopendata-ls": "*",
+        "phpseclib/phpseclib": "*"
     },
     "extra": {
         "ezpublish-legacy-extension-name": "ocopenapi"

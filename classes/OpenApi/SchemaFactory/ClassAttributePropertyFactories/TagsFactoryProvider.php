@@ -53,11 +53,15 @@ class TagsFactoryProvider extends ContentClassAttributePropertyFactory
         if (!$tag instanceof \eZTagsObject) {
             return $result;
         }
-        $tags = \eZTagsObject::fetchByParentID($tagID);
 
-        foreach ($tags as $t) {
-            $result [] = $t->getKeyword();
-        }
-        return $result;
+        $pathString = $tag->attribute('path_string');
+        $rows = (array)\eZDB::instance()->arrayQuery("
+        SELECT jsonb_object_agg(k.locale, k.keyword) ->> 'ita-IT' as keyword 
+                FROM eztags t, eztags_keyword k 
+                WHERE t.id = k.keyword_id and t.main_tag_id = 0 and path_string like '$pathString%' and path_string != '$pathString'
+                GROUP BY t.id order by parent_id, id, path_string
+        ");
+
+        return array_column($rows, 'keyword');
     }
 }
