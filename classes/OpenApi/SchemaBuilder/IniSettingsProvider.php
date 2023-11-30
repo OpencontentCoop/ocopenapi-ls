@@ -46,7 +46,7 @@ class IniSettingsProvider implements SettingsProviderInterface
             }
 
             if ($ocopenapaIni->hasVariable('PDND', 'JwtAuthentication')) {
-                $settings->jwtAccessEnabled = $ocopenapaIni->variable('PDND', 'PDNDJwtAuthentication') === 'enabled';
+                $settings->jwtAccessEnabled = $ocopenapaIni->variable('PDND', 'JwtAuthentication') === 'enabled';
             }
 
             $this->settings = $settings;

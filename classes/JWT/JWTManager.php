@@ -5,6 +5,7 @@ use phpseclib3\Common\Functions\Strings;
 use phpseclib3\Crypt\RSA;
 use phpseclib3\Math\BigInteger;
 use Opencontent\OpenApi\Exceptions\UnauthorizedException;
+use Firebase\JWT\JWT;
 
 class JWTManager
 {
@@ -20,6 +21,8 @@ class JWTManager
     ];
 
     private $wellKnownUrl;
+
+    private static $internalIssuer = 'opencity';
 
     private function __construct(string $token)
     {
@@ -41,14 +44,57 @@ class JWTManager
     public function getUserId(): ?int
     {
         $this->verify();
-        $user = eZUser::fetchByName($this->decodedToken['payload']['purposeId']);
+        $username = $this->decodedToken['payload']['purposeId'] ?? $this->decodedToken['payload']['username'];
+        $user = eZUser::fetchByName($username);
         if (!$user instanceof eZUser) {
+            if (!isset($this->decodedToken['payload']['purposeId'])){
+                throw new UnexpectedValueException('PurposeId not found');
+            }
             $user = $this->createUser();
         }
 
         $this->setRateLimit();
 
         return (int)$user->id();
+    }
+
+    public static function issueInternalJWTToken(eZUser $user): string
+    {
+        $issuer = OpenPABase::getCurrentSiteaccessIdentifier();
+        $tokenTTL = 120;
+        $now = time();
+        /** @var eZContentObject[] $groups */
+        $groups = $user->groups(true);
+        $allowedRoles = [];
+        foreach ($groups as $group) {
+            $allowedRoles[] = eZCharTransform::instance()
+                ->transformByGroup($group->attribute('name'), 'identifier');
+        }
+
+        $payload = [
+            "iss" => self::$internalIssuer,
+            "aud" => self::$internalIssuer,
+            "iat" => $now,
+            "nbf" => $now,
+            "exp" => $now + $tokenTTL,
+            "uid" => $user->id(),
+            "name" => $user->attribute('contentobject')->attribute('name'),
+            "username" => $user->attribute('login'),
+            "email" => $user->attribute('email'),
+            "email_verified" => true,
+            self::$internalIssuer . "-claims" => [
+                "allowed-roles" => $allowedRoles,
+                "default-role" => $user->attribute('contentobject')->attribute('class_identifier'),
+                "user-id" => $user->id(),
+                "tenant" => $issuer,
+            ],
+        ];
+
+        $privateKeyFilePath = './jwt/private.key.pem';
+        $privateKey = file_get_contents($privateKeyFilePath);
+        $jwt = JWT::encode($payload, $privateKey, 'RS256');
+
+        return $jwt;
     }
 
     private function setRateLimit()
@@ -59,7 +105,7 @@ class JWTManager
         $apiSettings = Loader::instance()->getSettingsProvider()->provideSettings();
         $apiSettings->rateLimitDocumentationEnabled = true;
         $apiSettings->rateLimitEnabled = true;
-        OpenApiRateLimit::instance()->setInterval(60*60*24);
+        OpenApiRateLimit::instance()->setInterval(60 * 60 * 24);
         OpenApiRateLimit::instance()->setRateLimitPerInterval(1000);
     }
 
@@ -114,6 +160,31 @@ class JWTManager
     {
         $this->decode();
 
+        $issuer = $this->decodedToken['payload']['iss'];
+        if ($issuer === self::$internalIssuer) {
+            $this->verifyInternalToken();
+        } else {
+            $this->verifyPDNDVoucher();
+        }
+    }
+
+    private function verifyInternalToken()
+    {
+        $publicKeyFilePath = './jwt/public.key.pem';
+        $publicKey = file_get_contents($publicKeyFilePath);
+        $token = JWT::decode($this->token, $publicKey, ['RS256']);
+
+        $now = new DateTimeImmutable();
+
+        if ($token->iss !== self::$internalIssuer ||
+            $token->nbf > $now->getTimestamp() ||
+            $token->exp < $now->getTimestamp()) {
+            throw new UnauthorizedException('Invalid JWT Token');
+        }
+    }
+
+    private function verifyPDNDVoucher()
+    {
         $typ = $this->decodedToken['headers']['typ'] ?? null;
         if ($typ !== 'at+jwt') {
             throw new UnauthorizedException('Invalid JWT Token: invalid header typ, expected typ');
