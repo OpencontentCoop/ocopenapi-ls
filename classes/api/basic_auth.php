@@ -6,17 +6,19 @@ class OpenApiBasicAuthStyle extends ezpRestAuthenticationStyle implements ezpRes
 {
     public function setup(ezcMvcRequest $request)
     {
-        $settings = Loader::instance()->getSettingsProvider()->provideSettings();
-        if ($settings->jwtAccessEnabled
-            && isset($request->raw['HTTP_AUTHORIZATION'])
-            && preg_match('/Bearer\s(\S+)/', $request->raw['HTTP_AUTHORIZATION'], $matches)) {
-            $token = $matches[1];
-            if ($userID = JWTManager::instance($token)->getUserId()) {
-                $auth = new ezcAuthentication(new ezcAuthenticationIdCredentials($userID));
-                $auth->addFilter(new OpenApiAuthenticationEzFilter());
-                return $auth;
+        try {
+            $settings = Loader::instance()->getSettingsProvider()->provideSettings();
+            if ($settings->jwtAccessEnabled
+                && isset($request->raw['HTTP_AUTHORIZATION'])
+                && preg_match('/Bearer\s(\S+)/', $request->raw['HTTP_AUTHORIZATION'], $matches)) {
+                $token = $matches[1];
+                if ($userID = JWTManager::instance($token)->getUserId()) {
+                    $auth = new ezcAuthentication(new ezcAuthenticationIdCredentials($userID));
+                    $auth->addFilter(new OpenApiAuthenticationEzFilter());
+                    return $auth;
+                }
             }
-        }
+        }catch (Throwable $e){}
         if ($request->authentication === null) {
             eZSession::lazyStart();
             $userID = eZSession::issetkey( 'eZUserLoggedInID', false ) ? eZSession::get( 'eZUserLoggedInID' ) : eZUser::anonymousId();
