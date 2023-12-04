@@ -101,12 +101,13 @@ class JWTManager
     {
         //@todo get rate limit from purpose
         //$purposeId = $this->decodedToken['payload']['purposeId'];
-
-        $apiSettings = Loader::instance()->getSettingsProvider()->provideSettings();
-        $apiSettings->rateLimitDocumentationEnabled = true;
-        $apiSettings->rateLimitEnabled = true;
-        OpenApiRateLimit::instance()->setInterval(60 * 60 * 24);
-        OpenApiRateLimit::instance()->setRateLimitPerInterval(1000);
+        try {
+            $apiSettings = Loader::instance()->getSettingsProvider()->provideSettings();
+            $apiSettings->rateLimitDocumentationEnabled = true;
+            $apiSettings->rateLimitEnabled = true;
+            OpenApiRateLimit::instance()->setInterval(60 * 60 * 24);
+            OpenApiRateLimit::instance()->setRateLimitPerInterval(1000);
+        }catch (Throwable $e){}
     }
 
     private function createUser(): eZUser

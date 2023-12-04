@@ -61,12 +61,14 @@ class OpenApiRateLimit
         if (self::$instance === null) {
             self::$instance = new static();
 
-            self::$instance->setEnabled(
-                Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitEnabled
-            );
-            self::$instance->setEnableDocumentation(
-                Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitDocumentationEnabled
-            );
+            try {
+                self::$instance->setEnabled(
+                    Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitEnabled
+                );
+                self::$instance->setEnableDocumentation(
+                    Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitDocumentationEnabled
+                );
+            }catch (Throwable $e){}
         }
 
         return self::$instance;
