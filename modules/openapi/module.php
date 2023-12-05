@@ -26,6 +26,13 @@ $ViewList['inspect'] = [
     'unordered_params' => [],
     "default_navigation_part" => 'ezsetupnavigationpart',
 ];
+$ViewList['audience'] = [
+    'functions' => ['doc'],
+    'script' => 'audience.php',
+    'params' => ['Section'],
+    'unordered_params' => [],
+    "default_navigation_part" => 'ezsetupnavigationpart',
+];
 
 $FunctionList = [];
 $FunctionList['doc'] = [];

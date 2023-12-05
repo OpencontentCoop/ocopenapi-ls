@@ -16,7 +16,12 @@ if (isset($_GET['debug'])) {
     //echo '<pre>';print_r($data);echo '</pre>';
     eZDisplayDebug();
 }else{
+    $filename = 'openapi.json';
+    if (eZHTTPTool::instance()->hasGetVariable('section')){
+        $filename = eZCharTransform::instance()->transformByGroup(eZHTTPTool::instance()->getVariable('section'), 'identifier') . '.json';
+    }
     header('Content-Type: application/json');
+    header("Content-Disposition: attachment; filename=$filename");
     echo json_encode($data);
 }
 

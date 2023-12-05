@@ -143,8 +143,9 @@ class Loader
             if ($settings->hasDocumentationSection($filters['section'])){
                 $section = $settings->getDocumentationSection($filters['section']);
                 $tags = $section['tags'] ?? false;
+                $readOnly = $section['read_only'] ?? false;
                 if ($tags) {
-                    return new TagFilteredSchemaBuilder($this->schemaBuilder, $tags, $section['title']);
+                    return new TagFilteredSchemaBuilder($this->schemaBuilder, $tags, $section['title'], $readOnly === 'true');
                 }
             }
         }elseif (isset($filters['tag'])){

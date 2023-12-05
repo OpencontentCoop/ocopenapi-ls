@@ -16,7 +16,12 @@ if (isset($_GET['debug'])) {
     //echo '<pre>';print_r($data);echo '</pre>';
     eZDisplayDebug();
 }else{
+    $filename = 'openapi.yaml';
+    if (eZHTTPTool::instance()->hasGetVariable('section')){
+        $filename = eZCharTransform::instance()->transformByGroup(eZHTTPTool::instance()->getVariable('section'), 'identifier') . '.yaml';
+    }
     header('Content-Type: text/vnd.yaml');
+    header("Content-Disposition: attachment; filename=$filename");
     echo $data;
 }
 
