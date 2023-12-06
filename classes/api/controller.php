@@ -1,6 +1,7 @@
 <?php
 
 use Opencontent\OpenApi;
+use Opencontent\OpenApi\Exceptions\UnauthorizedException;
 use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 use Opencontent\Opendata\Api\Exception\BaseException;
 
@@ -50,6 +51,13 @@ class OpenApiController extends ezpRestMvcController
         $result->variables = $schema;
 
         return $result;
+    }
+
+    public function doUnauthorized()
+    {
+        return $this->doExceptionResult(
+            new UnauthorizedException($this->request->variables['error_text'] ?? null)
+        );
     }
 
     public function doAction()

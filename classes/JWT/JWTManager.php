@@ -1,6 +1,7 @@
 <?php
 
 use Opencontent\OpenApi\Loader;
+use Opencontent\OpenApi\SchemaBuilder\Settings;
 use phpseclib3\Common\Functions\Strings;
 use phpseclib3\Crypt\RSA;
 use phpseclib3\Math\BigInteger;
@@ -24,38 +25,48 @@ class JWTManager
 
     private static $internalIssuer = 'opencity';
 
-    private function __construct(string $token)
+    private $settings;
+
+    private function __construct(string $token, Settings $settings)
     {
         $this->token = $token;
+        $this->settings = $settings;
     }
 
-    public static function instance($token): JWTManager
+    private static $privateKeyFilePath = '/../jwt/private.key.pem';
+
+    private static $publicKeyFilePath = '/../jwt/public.key.pem';
+
+    public static function instance($token, Settings $settings): JWTManager
     {
         if (empty($token)) {
             throw new UnauthorizedException('JWT Token not found');
         }
         if (!isset(self::$instances[$token])) {
-            self::$instances[$token] = new static($token);
+            self::$instances[$token] = new static($token, $settings);
         }
 
         return self::$instances[$token];
     }
 
-    public function getUserId(): ?int
+    public function getUserId(): int
     {
-        $this->verify();
-        $username = $this->decodedToken['payload']['purposeId'] ?? $this->decodedToken['payload']['username'];
-        $user = eZUser::fetchByName($username);
-        if (!$user instanceof eZUser) {
-            if (!isset($this->decodedToken['payload']['purposeId'])){
-                throw new UnexpectedValueException('PurposeId not found');
+        try {
+            $this->verify();
+            $username = $this->decodedToken['payload']['purposeId'] ?? $this->decodedToken['payload']['username'];
+            $user = eZUser::fetchByName($username);
+            if (!$user instanceof eZUser) {
+                if (!isset($this->decodedToken['payload']['purposeId'])) {
+                    throw new UnexpectedValueException('User not found or purposeId not found in token');
+                }
+                $user = $this->createUser();
             }
-            $user = $this->createUser();
+            $this->setRateLimit();
+
+            return (int)$user->id();
+        }catch (Throwable $e){
+            throw new UnauthorizedException($e->getMessage(), $e->getCode(), $e);
         }
-
-        $this->setRateLimit();
-
-        return (int)$user->id();
     }
 
     public static function issueInternalJWTToken(eZUser $user): string
@@ -90,8 +101,7 @@ class JWTManager
             ],
         ];
 
-        $privateKeyFilePath = './jwt/private.key.pem';
-        $privateKey = file_get_contents($privateKeyFilePath);
+        $privateKey = file_get_contents(eZSys::rootDir() . self::$privateKeyFilePath);
         $jwt = JWT::encode($payload, $privateKey, 'RS256');
 
         return $jwt;
@@ -162,15 +172,16 @@ class JWTManager
         $issuer = $this->decodedToken['payload']['iss'];
         if ($issuer === self::$internalIssuer) {
             $this->verifyInternalToken();
-        } else {
+        } elseif ($this->settings->pdndAccessEnabled) {
             $this->verifyPDNDVoucher();
+        } else {
+            throw new UnauthorizedException('Can not verify JWT Token');
         }
     }
 
     private function verifyInternalToken()
     {
-        $publicKeyFilePath = './jwt/public.key.pem';
-        $publicKey = file_get_contents($publicKeyFilePath);
+        $publicKey = file_get_contents(eZSys::rootDir() . self::$publicKeyFilePath);
         $token = JWT::decode($this->token, $publicKey, ['RS256']);
 
         $now = new DateTimeImmutable();

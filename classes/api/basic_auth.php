@@ -1,5 +1,6 @@
 <?php
 
+use Opencontent\OpenApi\Exceptions\UnauthorizedException;
 use Opencontent\OpenApi\Loader;
 
 class OpenApiBasicAuthStyle extends ezpRestAuthenticationStyle implements ezpRestAuthenticationStyleInterface
@@ -10,11 +11,20 @@ class OpenApiBasicAuthStyle extends ezpRestAuthenticationStyle implements ezpRes
         if ($settings->jwtAccessEnabled
             && isset($request->raw['HTTP_AUTHORIZATION'])
             && preg_match('/Bearer\s(\S+)/', $request->raw['HTTP_AUTHORIZATION'], $matches)) {
-            $token = $matches[1];
-            if ($userID = JWTManager::instance($token)->getUserId()) {
+            try {
+                $token = $matches[1];
+                $userID = (int)JWTManager::instance($token, $settings)->getUserId();
                 $auth = new ezcAuthentication(new ezcAuthenticationIdCredentials($userID));
                 $auth->addFilter(new OpenApiAuthenticationEzFilter());
+
                 return $auth;
+            }catch (UnauthorizedException $e){
+                $fatalRequest = new ezpRestRequest();
+                $fatalRequest->uri = "{$this->prefix}/openapi/unauthorized";
+                $fatalRequest->protocol = "http-get";
+                $fatalRequest->variables['error_text'] = $e->getMessage();
+
+                return new ezcMvcInternalRedirect($fatalRequest);
             }
         }
         if ($request->authentication === null) {

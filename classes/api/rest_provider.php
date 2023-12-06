@@ -26,6 +26,14 @@ class OpenApiProvider implements ezpRestProviderInterface
             ), $version),
         ];
 
+        $routes['openApiInvalidToken'] = new ezpRestVersionedRoute(new OpenApiRailsRoute(
+            '/unauthorized',
+            'OpenApiController',
+            'unauthorized',
+            [],
+            'http-get'
+        ), $version);
+
         // sort pattern by length
         $paths = $schema['paths'];
         $patterns = array_keys($paths);

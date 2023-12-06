@@ -77,7 +77,7 @@ class Loader
                 }
             }
             if (empty($providers)){
-                \eZDebug::writeNotice("Openapi provider list is empty");
+                \eZDebug::writeNotice("Openapi provider list is empty", __METHOD__);
                 $endpointProvider = new EmptyEndpointFactory();
             }else {
                 $endpointProvider = new ChainEndpointFactoryDiscover($providers);
