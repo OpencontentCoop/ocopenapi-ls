@@ -3,6 +3,7 @@
 namespace Opencontent\OpenApi;
 
 use Opencontent\OpenApi\EndpointDiscover\ChainEndpointFactoryDiscover;
+use Opencontent\OpenApi\EndpointDiscover\EmptyEndpointFactory;
 use Opencontent\OpenApi\SchemaBuilder\IniSettingsProvider;
 use Opencontent\OpenApi\SchemaBuilder\SettingsProviderInterface;
 
@@ -76,9 +77,11 @@ class Loader
                 }
             }
             if (empty($providers)){
-                throw new \RuntimeException("Provider list is empty");
+                \eZDebug::writeNotice("Openapi provider list is empty");
+                $endpointProvider = new EmptyEndpointFactory();
+            }else {
+                $endpointProvider = new ChainEndpointFactoryDiscover($providers);
             }
-            $endpointProvider = new ChainEndpointFactoryDiscover($providers);
         }
         $this->endpointProvider = $endpointProvider;
     }
