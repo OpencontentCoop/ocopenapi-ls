@@ -54,6 +54,26 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
         return new EndpointFactoryCollection($this->endpoints);
     }
 
+    private function getOperationFactory(string $type): OperationFactory
+    {
+        switch ($type) {
+            case 'search':
+                return new OperationFactory\ContentObject\FilteredSearchOperationFactory();
+            case 'create':
+                return new OperationFactory\ContentObject\CreateOperationFactory();
+            case 'read':
+                return new OperationFactory\ContentObject\ReadOperationFactory();
+            case 'update':
+                return new OperationFactory\ContentObject\UpdateOperationFactory();
+            case 'merge':
+                return new OperationFactory\ContentObject\MergePatchOperationFactory();
+            case 'delete':
+                return new OperationFactory\ContentObject\DeleteOperationFactory();
+        }
+
+        throw new \InvalidArgumentException(sprintf('OperationFactory type %s not mapped', $type));
+    }
+
     private function discoverFromRoles()
     {
         /** @var eZRole[] $roles */
@@ -133,18 +153,18 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 'nodes' => [$item],
                                 'path_suffix' => '',
                                 'operations' => new OperationFactoryCollection([
-                                    (new OperationFactory\ContentObject\CreateOperationFactory()),
-                                    (new OperationFactory\ContentObject\SearchOperationFactory()),
+                                    $this->getOperationFactory('create'),
+                                    $this->getOperationFactory('search'),
                                 ]),
                             ],
                             [
                                 'nodes' => [$item],
                                 'path_suffix' => '/{id}',
                                 'operations' => new OperationFactoryCollection([
-                                    (new OperationFactory\ContentObject\ReadOperationFactory()),
-                                    (new OperationFactory\ContentObject\UpdateOperationFactory()),
-                                    (new OperationFactory\ContentObject\MergePatchOperationFactory()),
-                                    (new OperationFactory\ContentObject\DeleteOperationFactory()),
+                                    $this->getOperationFactory('read'),
+                                    $this->getOperationFactory('update'),
+                                    $this->getOperationFactory('merge'),
+                                    $this->getOperationFactory('delete'),
                                 ]),
                             ],
                         ];

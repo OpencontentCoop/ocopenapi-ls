@@ -9,7 +9,7 @@ use Opencontent\OpenApi\SchemaBuilder\SettingsProviderInterface;
 
 class Loader
 {
-    const API_VERSION = '1.0.0 alpha';
+    const API_VERSION = '1.0.0';
 
     private static $instance;
 

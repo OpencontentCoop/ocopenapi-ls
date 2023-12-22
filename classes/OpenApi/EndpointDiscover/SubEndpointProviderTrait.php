@@ -242,7 +242,7 @@ trait SubEndpointProviderTrait
             ->addTag($tag)
             ->setOperationFactoryCollection(
                 new OperationFactoryCollection([
-                    (new OperationFactory\ContentObject\SearchOperationFactory()),
+                    (new OperationFactory\ContentObject\FilteredSearchOperationFactory()),
                 ])
             );
 
@@ -298,7 +298,7 @@ trait SubEndpointProviderTrait
                 ->addTag($tag)
                 ->setOperationFactoryCollection(
                     new OperationFactoryCollection([
-                        (new OperationFactory\ContentObject\SearchOperationFactory()),
+                        (new OperationFactory\ContentObject\FilteredSearchOperationFactory()),
                     ])
                 );
 

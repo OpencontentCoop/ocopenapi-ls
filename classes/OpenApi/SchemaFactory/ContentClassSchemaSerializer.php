@@ -57,6 +57,11 @@ class ContentClassSchemaSerializer
             $properties = [];
             foreach ($factories as $identifier => $factory) {
                 $properties[$identifier] = $factory->provideProperties();
+                if ($factory instanceof ContentClassAttributePropertyFactory){
+                    if ($factory->getAttribute()->attribute('category') === 'hidden'){
+                        $properties[$identifier]['deprecated'] = true;
+                    }
+                }
             }
 
             $requiredFields = [];
