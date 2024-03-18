@@ -19,6 +19,7 @@ class OpenApiBasicAuthStyle extends ezpRestAuthenticationStyle implements ezpRes
 
                 return $auth;
             }catch (UnauthorizedException $e){
+                eZDebug::writeError($e->getMessage(), __METHOD__);
                 $fatalRequest = new ezpRestRequest();
                 $fatalRequest->uri = "{$this->prefix}/openapi/unauthorized";
                 $fatalRequest->protocol = "http-get";

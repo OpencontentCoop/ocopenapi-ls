@@ -153,7 +153,7 @@ class JWTManager
                     'email' => $this->decodedToken['payload']['purposeId'] . '|@pdnd.example.com',
                 ],
                 'gdpr_acceptance' => 'true',
-                'antispam' => 'true',
+//                'antispam' => 'true',
             ],
         ], true);
 
