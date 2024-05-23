@@ -26,9 +26,16 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
      */
     private $endpoints;
 
+    private $excludeRoles = [];
+
     public function __construct(eZCLI $cli = null)
     {
         $this->cli = $cli;
+        if (\eZINI::instance('ocopenapi.ini')
+            ->hasVariable('RoleDiscover', 'Exclude')) {
+            $this->excludeRoles = (array) \eZINI::instance('ocopenapi.ini')
+                ->variable('RoleDiscover', 'Exclude');
+        }
     }
 
     /**
@@ -79,7 +86,11 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
         /** @var eZRole[] $roles */
         $roles = eZRole::fetchList();
         foreach ($roles as $role) {
-            $this->log($role->attribute('name'), 'warning');
+            if (in_array($role->attribute('name'), $this->excludeRoles)) {
+                $this->log('EXCLUDE ##### ' . $role->attribute('name') . ' #####', 'error');
+                continue;
+            }
+            $this->log('##### ' . $role->attribute('name') . ' #####', 'error');
             /** @var eZPolicy $policy */
             foreach ($role->policyList() as $policy) {
                 if ($policy->attribute('module_name') == 'content' && $policy->attribute('function_name') == 'create') {
@@ -139,7 +150,6 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             }
                         }
                     }
-                    $this->log(' ');
 
                     $classes = array_unique($classes);
 
@@ -179,10 +189,10 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                                 $path = '/' . strtolower($node->urlAlias()) . $pathGroupItem['path_suffix'];
                                 $tag = str_replace('/', '-', strtolower($node->urlAlias()));
                                 if (isset($this->endpoints[$path]) && $this->endpoints[$path] instanceof EndpointFactory\NodeClassesEndpointFactory) {
-                                    $this->log("Append to node endpoint $path classes " . implode(', ', $classes));
+                                    $this->log("  Append to node endpoint $path classes " . implode(', ', $classes));
                                     $this->endpoints[$path]->appendClassIdentifierList($classes);
                                 } else {
-                                    $this->log("Create node endpoint $path for classes " . implode(', ', $classes));
+                                    $this->log("  Create node endpoint $path for classes " . implode(', ', $classes));
                                     $this->endpoints[$path] = (new EndpointFactory\NodeClassesEndpointFactory(
                                         $item->attribute('node_id'), $classes
                                     ))
@@ -194,9 +204,13 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                             }
                         }
                     }
+                    $this->log(' ');
                 }
             }
         }
+
+        $this->log(' ');
+        $this->log('Build sub endpoints', 'error');
 
         foreach ($this->endpoints as $endpoint) {
             if ($endpoint instanceof EndpointFactory\NodeClassesEndpointFactory
@@ -205,7 +219,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
                     instanceof OperationFactory\ContentObject\ReadOperationFactory) {
                 $operation = $endpoint->getOperationByMethod('get');
 
-                $this->log('...analyze ' . $endpoint->getPath(), 'warning');
+                $this->log('  ...analyze ' . $endpoint->getPath(), 'warning');
                 $this->createSubEndpoints($endpoint, $operation);
             }
         }

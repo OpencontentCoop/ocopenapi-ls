@@ -42,4 +42,9 @@ class ChainEndpointFactoryDiscover extends EndpointFactoryProvider implements Ca
             }
         }
     }
+
+    public function getProviders(): array
+    {
+        return $this->providers;
+    }
 }

@@ -17,7 +17,6 @@ use eZObjectRelationListType;
 
 trait SubEndpointProviderTrait
 {
-
     /**
      * @var EndpointFactory\NodeClassesEndpointFactory[]
      */
@@ -44,7 +43,9 @@ trait SubEndpointProviderTrait
     {
         $log = '';
         $endpoints = Utils::createMatrixSubEndpoints($endpoint, $operation, $log);
-        $this->log($log);
+        if (!empty($log)) {
+            $this->log($log);
+        }
 
         return $endpoints;
     }

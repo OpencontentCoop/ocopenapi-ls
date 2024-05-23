@@ -190,6 +190,7 @@ abstract class EndpointFactory implements \JsonSerializable, \Serializable
         $data['enabled'] = (int)$this->isEnabled();
         $data['operations'] = $this->getOperationFactoryCollection()->toArray();
         $data['type'] = get_class($this);
+        $data['tags'] = $this->getTags();
 
         return $data;
     }
