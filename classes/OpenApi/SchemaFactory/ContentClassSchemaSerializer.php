@@ -55,10 +55,24 @@ class ContentClassSchemaSerializer
             $class = $this->loadClass($classIdentifier);
             $factories = $this->loadFactories($class, $schemaName);
             $properties = [];
+            $deprecateCategories = [];
+            if (eZINI::instance('ocopenapi.ini')->hasVariable('ClassAttributeSettings', 'DeprecateAttributeCategories')) {
+                $deprecateCategories = (array)eZINI::instance('ocopenapi.ini')->variable('ClassAttributeSettings', 'DeprecateAttributeCategories');
+            }
+            $deprecateIdentifiers = [];
+            if (eZINI::instance('ocopenapi.ini')->hasVariable('ClassAttributeSettings', 'DeprecateAttributeIdentifiers')) {
+                $deprecateIdentifiers = (array)eZINI::instance('ocopenapi.ini')->variable('ClassAttributeSettings', 'DeprecateAttributeIdentifiers');
+            }
             foreach ($factories as $identifier => $factory) {
                 $properties[$identifier] = $factory->provideProperties();
                 if ($factory instanceof ContentClassAttributePropertyFactory){
-                    if ($factory->getAttribute()->attribute('category') === 'hidden'){
+                    if (
+                        in_array($factory->getAttribute()->attribute('category'), $deprecateCategories)
+                        || in_array(
+                            $factory->getClass()->attribute('identifier') . '/' . $factory->getAttribute()->attribute('identifier'),
+                            $deprecateIdentifiers
+                        )
+                    ){
                         $properties[$identifier]['deprecated'] = true;
                     }
                 }
