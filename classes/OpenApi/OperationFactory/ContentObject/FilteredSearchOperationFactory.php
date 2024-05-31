@@ -161,7 +161,6 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                                               FROM ezcontentobject
                                               WHERE ezcontentobject.remote_id='$contentObjectIdentifier')";
                 $resArray = \eZDB::instance()->arrayQuery($query);
-
                 if (count($resArray) == 1 && $resArray !== false) {
                     $nodeId = $resArray[0]['node_id'];
                     $view = $embedHtml;
@@ -365,7 +364,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
             }
             $this->filters['embed_html'] = [
                 'in' => OA\Parameter::IN_QUERY,
-                'description' => 'Comma separated fields to show. The blank value means show all fields',
+                'description' => 'Html version of item',
                 'schema' => [
                     'type' => 'string',
                     'enum' => [
