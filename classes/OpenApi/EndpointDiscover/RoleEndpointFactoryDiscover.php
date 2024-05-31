@@ -69,7 +69,7 @@ class RoleEndpointFactoryDiscover extends EndpointFactoryProvider
             case 'create':
                 return new OperationFactory\ContentObject\CreateOperationFactory();
             case 'read':
-                return new OperationFactory\ContentObject\ReadOperationFactory();
+                return new OperationFactory\ContentObject\EmbedReadOperationFactory();
             case 'update':
                 return new OperationFactory\ContentObject\UpdateOperationFactory();
             case 'merge':
