@@ -86,7 +86,7 @@ class EmbedReadOperationFactory extends ReadOperationFactory
                     $nodeId,
                     $view
                 );
-                $resource['embedded'][$embedHtml] = preg_replace(['/\s*\R\s*/', '/\s{2,}/', '/[\t\n]/'], '', $html);
+                $resource['embedded'][$embedHtml] = EmbedReadOperationFactory::cleanEmbedHtml($html);
             } else {
                 $resource['embedded'][$embedHtml] = '';
             }
@@ -116,4 +116,19 @@ class EmbedReadOperationFactory extends ReadOperationFactory
 
         return $result;
     }
+
+    public static function cleanEmbedHtml(string $html)
+    {
+        $html = preg_replace(['/\s*\R\s*/', '/\s{2,}/', '/[\t\n]/'], '', $html);
+        $domain = 'https://' . \eZSys::hostname();
+        $html = str_replace('href="/', 'href="' . $domain . '/', $html);
+        $html = str_replace('src="/ocembed', 'data-local-src="/ocembed', $html);
+        $html = str_replace('src="/', 'src="' . $domain . '/', $html);
+        $html = str_replace('data-src="', 'src="', $html);
+        if (strpos($html, 'id="relations-map') !== false) {
+            $html = str_replace('width: 100%; height: 400px;', 'display:none', $html);
+        }
+        return $html;
+    }
+
 }

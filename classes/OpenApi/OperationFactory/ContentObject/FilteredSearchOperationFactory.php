@@ -168,7 +168,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                         $nodeId,
                         $view
                     );
-                    $hit['embedded'][$embedHtml] = preg_replace(['/\s*\R\s*/', '/\s{2,}/', '/[\t\n]/'], '', $html);
+                    $hit['embedded'][$embedHtml] = EmbedReadOperationFactory::cleanEmbedHtml($html);
                 }else{
                     $hit['embedded'][$embedHtml] = '';
                 }
