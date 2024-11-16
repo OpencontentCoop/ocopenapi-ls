@@ -13,7 +13,7 @@ class Logger extends AbstractLogger implements LoggerInterface
         return new static();
     }
 
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = array()): void
     {
         if (!empty($context)) {
             foreach ($context as $key => $value) {
