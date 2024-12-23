@@ -76,7 +76,10 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
 
     protected function buildResult(SearchResults $searchResults, $path)
     {
-        $parameters = [];
+        $parameters = [
+            'offset' => 0,
+            'limit' => 0,
+        ];
         foreach ($this->generateSearchParameters() as $parameter) {
             if ($this->getCurrentRequestParameter($parameter->name)) {
                 $parameters[$parameter->name] = $this->getCurrentRequestParameter($parameter->name);
@@ -98,7 +101,7 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory
             $result['next'] = $path . '?' . http_build_query($nextParameters);
         }
 
-        if (isset($parameters['offset']) && $parameters['offset'] > 0) {
+        if ($parameters['offset'] > 0) {
             $prevParameters = $parameters;
             $prevParameters['offset'] -= $prevParameters['limit'];
             if ($prevParameters['offset'] < 0) {

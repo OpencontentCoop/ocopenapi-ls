@@ -7,6 +7,7 @@ use Opencontent\OpenApi\Logger;
 use Opencontent\OpenApi\OperationFactoryCollection;
 use Opencontent\OpenApi\OperationFactory;
 use Opencontent\OpenApi\EndpointFactory;
+use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaSerializer;
 use eZContentClass;
@@ -119,10 +120,14 @@ trait SubEndpointProviderTrait
                             $relatedEndpoint = array_pop($relatedEndpoints);
                         }
 
-                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
+                        $propertyFactory = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
                             $class,
                             $classAttribute
-                        )->providePropertyIdentifier();
+                        );
+                        if (!$propertyFactory instanceof ContentClassAttributePropertyFactory) {
+                            continue;
+                        }
+                        $identifier = $propertyFactory->providePropertyIdentifier();
 
                         $relationsPath = $endpoint->getPath() . '/' . $identifier;
                         $relationsPathItem = $relationsPath . '/{relatedItemId}';
@@ -336,10 +341,14 @@ trait SubEndpointProviderTrait
                 /** @var eZContentClassAttribute $classAttribute */
                 foreach ($class->dataMap() as $classAttribute) {
                     if ($classAttribute->attribute('data_type_string') == OCMultiBinaryType::DATA_TYPE_STRING) {
-                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
+                        $propertyFactory = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
                             $class,
                             $classAttribute
-                        )->providePropertyIdentifier();
+                        );
+                        if (!$propertyFactory instanceof ContentClassAttributePropertyFactory) {
+                            continue;
+                        }
+                        $identifier = $propertyFactory->providePropertyIdentifier();
 
                         $multiBinaryPath = $endpoint->getPath() . '/' . $identifier;
                         $this->log(

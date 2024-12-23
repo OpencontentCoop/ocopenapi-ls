@@ -8,6 +8,8 @@ use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 
 class EmbedReadOperationFactory extends ReadOperationFactory
 {
+    private $filters;
+
     protected function generateOperationAdditionalProperties()
     {
         $properties = parent::generateOperationAdditionalProperties();

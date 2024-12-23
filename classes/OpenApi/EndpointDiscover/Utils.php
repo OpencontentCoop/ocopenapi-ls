@@ -3,6 +3,7 @@
 namespace Opencontent\OpenApi\EndpointDiscover;
 
 use Opencontent\OpenApi\OperationFactoryCollection;
+use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaSerializer;
 use Opencontent\OpenApi\EndpointFactory;
@@ -31,10 +32,14 @@ class Utils
                 /** @var eZContentClassAttribute $classAttribute */
                 foreach ($class->dataMap() as $classAttribute) {
                     if ($classAttribute->attribute('data_type_string') == eZMatrixType::DATA_TYPE_STRING) {
-                        $identifier = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
+                        $propertyFactory = ContentClassSchemaSerializer::loadContentClassAttributePropertyFactory(
                             $class,
                             $classAttribute
-                        )->providePropertyIdentifier();
+                        );
+                        if (!$propertyFactory instanceof ContentClassAttributePropertyFactory) {
+                            continue;
+                        }
+                        $identifier = $propertyFactory->providePropertyIdentifier();
 
                         $matrixPath = $endpoint->getPath() . '/' . $identifier;
                         $log .= "Create matrix endpoint $matrixPath for attribute " . $class->attribute('identifier') . '/' . $classAttribute->attribute('identifier') . PHP_EOL;
