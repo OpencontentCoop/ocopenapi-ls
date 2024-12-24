@@ -14,6 +14,7 @@ class PriceFactoryProvider extends ContentClassAttributePropertyFactory
         $schema = parent::provideProperties();
         $schema['type'] = 'number';
         $schema['format'] = 'float';
+        $schema['nullable'] = true;
 
         return $schema;
     }

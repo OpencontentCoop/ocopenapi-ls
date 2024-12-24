@@ -11,6 +11,7 @@ class EventFactoryProvider extends ContentClassAttributePropertyFactory
     {
         return [
             "type" => "string",
+            "nullable" => true,
             "description" => $this->getPropertyDescription() . ' (iCalendar RFC pattern rule)',
             "example" => "DTSTART=20200115T090000Z;DTEND=20200115T110000Z;FREQ=DAILY;INTERVAL=1;UNTIL=20200130T230000Z"
         ];

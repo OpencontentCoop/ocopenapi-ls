@@ -29,6 +29,7 @@ class RelationFactoryProvider extends ContentClassAttributePropertyFactory
     {
         return [
             "type" => "object",
+            "nullable" => true,
             "properties" => [
                 "id" => [
                     "description" => 'Content id',

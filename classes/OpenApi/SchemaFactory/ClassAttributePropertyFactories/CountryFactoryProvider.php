@@ -24,6 +24,7 @@ class CountryFactoryProvider extends ContentClassAttributePropertyFactory
         $schema = array(
             "enum" => array_keys($this->values),
             "description" => $this->getPropertyDescription(),
+            "nullable" => true,
         );
 
         $classContent = $this->attribute->content();

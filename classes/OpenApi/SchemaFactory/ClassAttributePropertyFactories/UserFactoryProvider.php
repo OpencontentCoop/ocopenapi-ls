@@ -10,6 +10,7 @@ class UserFactoryProvider extends ContentClassAttributePropertyFactory
     {
         return array(
             "type" => "object",
+            "nullable" => true,
             "description" => $this->getPropertyDescription(),
             "properties" => array(
                 "login" => array(

@@ -3,6 +3,7 @@
 namespace Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 
 use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
+use Opencontent\Opendata\Api\Values\Content;
 
 class StringFactoryProvider extends ContentClassAttributePropertyFactory
 {
@@ -23,4 +24,8 @@ class StringFactoryProvider extends ContentClassAttributePropertyFactory
         return $schema;
     }
 
+    public function serializeValue(Content $content, $locale)
+    {
+        return (string)$this->getContent($content, $locale);
+    }
 }

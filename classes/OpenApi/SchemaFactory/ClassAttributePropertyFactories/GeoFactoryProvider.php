@@ -10,6 +10,7 @@ class GeoFactoryProvider extends ContentClassAttributePropertyFactory
     {
         return [
             "type" => "object",
+            "nullable" => true,
             "description" => $this->getPropertyDescription(),
             "properties" => array(
                 "address" => array(

@@ -9,6 +9,7 @@ class DateFactoryProvider extends ContentClassAttributePropertyFactory
     public function provideProperties()
     {
         $data = parent::provideProperties();
+        $data['nullable'] = true;
         $default = $this->attribute->attribute( \eZDateType::DEFAULT_FIELD );
 
         return array_merge_recursive($data, array(

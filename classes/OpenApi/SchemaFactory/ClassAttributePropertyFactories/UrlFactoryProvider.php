@@ -10,6 +10,7 @@ class UrlFactoryProvider extends ContentClassAttributePropertyFactory
     {
         return array(
             "type" => "string",
+            "nullable" => true,
             "format" => "uri",
             "description" => $this->getPropertyDescription(),
         );

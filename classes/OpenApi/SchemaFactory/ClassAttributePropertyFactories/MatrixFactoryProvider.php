@@ -29,7 +29,7 @@ class MatrixFactoryProvider extends ContentClassAttributePropertyFactory
 
     public function serializeValue(Content $content, $locale)
     {
-        $rows = $this->getContent($content, $locale);
+        $rows = (array)$this->getContent($content, $locale);
         foreach ($rows as $index => $row){
             $rows[$index] = ['index' => $index] + $row;
         }

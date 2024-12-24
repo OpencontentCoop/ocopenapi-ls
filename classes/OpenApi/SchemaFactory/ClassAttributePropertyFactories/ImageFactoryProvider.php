@@ -11,6 +11,7 @@ class ImageFactoryProvider extends ContentClassAttributePropertyFactory
     {
         return [
             "type" => "object",
+            "nullable" => true,
             "description" => $this->getPropertyDescription(),
             "properties" => array(
                 "filename" => array(

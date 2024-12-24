@@ -82,6 +82,7 @@ class ContentClassSchemaSerializer
             foreach ($factories as $identifier => $factory) {
                 if ($factory->isRequired()) {
                     $requiredFields[] = $identifier;
+                    unset($properties[$identifier]['nullable']);
                 }
             }
 

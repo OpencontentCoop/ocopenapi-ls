@@ -11,7 +11,8 @@ class EmailFactoryProvider extends ContentClassAttributePropertyFactory
         return array(
             "type" => "string",
             "description" => $this->getPropertyDescription(),
-            "format" => "email"
+            "format" => "email",
+            "nullable" => true,
         );
     }
 
