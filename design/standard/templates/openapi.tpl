@@ -10,11 +10,11 @@
     {include uri='design:openapi_sections.tpl'}
 {else}
     <style type="text/css">
-        @import url({"stylesheets/swagger-ui.css"|ezdesign});
+        @import url({"stylesheets/swagger-ui-5.11.0.css"|ezdesign});
     </style>
 <div class="container my-5">
     <div id="swagger-ui" style="min-height: 100px"></div>
-    <script src={'javascript/swagger-ui-bundle.js'|ezdesign}></script>
+    <script src={'javascript/swagger-ui-bundle-5.11.0.js'|ezdesign}></script>
     <script>
         window.onload = function () {ldelim}
             window.ui = SwaggerUIBundle({ldelim}
