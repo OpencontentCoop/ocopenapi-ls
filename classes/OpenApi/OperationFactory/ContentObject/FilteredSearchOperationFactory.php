@@ -112,9 +112,13 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
             if (!in_array($sort, $sortValues)) {
                 throw new InvalidParameterException('sort', $sort);
             }
+            if ($sort === 'content-title'){
+                $sort = 'name';
+            }
             $order = $order === 'asc' ? 'asc' : 'desc';
             $sortString = "[$sort=>$order]";
         }
+
         $query[] = 'sort ' . $sortString;
 
         $limit = (int)$this->getCurrentRequestParameter('limit');
@@ -123,7 +127,9 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
         }
         $query[] = 'limit ' . $limit;
 
-        $offset = (int)$this->getCurrentRequestParameter('offset');
+        $offsetCompat = $this->getCurrentRequestParameter('skip')
+            ?? $this->getCurrentRequestParameter('offset');
+        $offset = (int)$offsetCompat;
         if ($offset < 0) {
             throw new InvalidParameterException('offset', $offset);
         }
@@ -213,6 +219,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
             $sortValues = [
                 'published',
                 'modified',
+                'content-title',
             ];
             $facetsValues = [];
 
