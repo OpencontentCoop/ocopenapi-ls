@@ -2,6 +2,7 @@
 
 use Opencontent\OpenApi;
 use Opencontent\OpenApi\Exceptions\UnauthorizedException;
+use Opencontent\OpenApi\OperationFactory\CacheAwareInterface;
 use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 use Opencontent\Opendata\Api\Exception\BaseException;
 
@@ -75,20 +76,24 @@ class OpenApiController extends ezpRestMvcController
 
             header("X-Api-User: " . eZUser::currentUserID());
             header("X-Api-Operation: " . $operation->getId());
-            header("Cache-Control: private, no-cache, no-store, must-revalidate");
+            if ($operation instanceof CacheAwareInterface && $operation->hasResponseHeaders($endpoint, $result)) {
+                $operation->setResponseHeaders($endpoint, $result);
+            } else {
+                header("Cache-Control: private, no-cache, no-store, must-revalidate");
+            }
             $languages = SchemaBuilderToolsTrait::getLanguageList();
             header("Content-Language: " . $languages[$operation->getCurrentRequestLanguage()]);
 
             return $result;
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $result = $this->doExceptionResult($e);
         }
 
         return $result;
     }
 
-    private function doExceptionResult(Exception $exception)
+    private function doExceptionResult(Throwable $exception)
     {
         $result = new ezcMvcResult;
         $result->variables['message'] = $exception->getMessage();
@@ -105,7 +110,7 @@ class OpenApiController extends ezpRestMvcController
         $this->rateLimitHandler->setHeaders();
         $result->status = new OpenApiErrorResponse(
             $serverErrorCode,
-            $exception->getMessage(),
+            $exception instanceof Exception ? $exception->getMessage() : 'Unexpected error',
             $errorType,
             $exception
         );

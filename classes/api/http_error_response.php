@@ -18,7 +18,7 @@ class OpenApiErrorResponse implements ezcMvcResultStatusObject
         $code = null,
         $message = null,
         $errorType = null,
-        Exception $exception = null
+        Throwable $exception = null
     )
     {
         $this->code = $code;
@@ -44,7 +44,8 @@ class OpenApiErrorResponse implements ezcMvcResultStatusObject
                 'error_type' => $this->errorType,
                 'error_message' => $this->message
             ];
-            if (Loader::instance()->getSettingsProvider()->provideSettings()->debugEnabled && $this->exception instanceof Exception) {
+            if (Loader::instance()->getSettingsProvider()->provideSettings()->debugEnabled && $this->exception instanceof Throwable) {
+                $body['error_debug_message'] = $this->exception->getMessage();
                 $body['error_debug'] = explode(PHP_EOL, $this->exception->getTraceAsString());
                 if ($this->exception->getPrevious() instanceof Exception){
                     $body['error_debug']['previous_message'] = $this->exception->getPrevious()->getMessage() . ' in ' . $this->exception->getPrevious()->getFile() . '#' . $this->exception->getPrevious()->getLine();

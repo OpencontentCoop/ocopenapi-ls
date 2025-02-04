@@ -3,16 +3,39 @@
 namespace Opencontent\OpenApi\OperationFactory\ContentObject;
 
 use Opencontent\OpenApi\EndpointFactory;
-use Opencontent\OpenApi\Exception;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\Exceptions\NotFoundException;
-use Opencontent\OpenApi\Exceptions\OutOfRangeException;
 use Opencontent\OpenApi\OperationFactory;
-use Opencontent\Opendata\Api\Exception\ForbiddenException;
+use Opencontent\OpenApi\OperationFactory\CacheAwareInterface;
+use ezpRestMvcResult;
 
-class ReadOperationFactory extends OperationFactory\ReadOperationFactory
+class ReadOperationFactory extends OperationFactory\ReadOperationFactory implements CacheAwareInterface
 {
     use ContentRepositoryTrait;
+
+    private $currentNodeId = null;
+
+    public function setResponseHeaders(EndpointFactory $endpointFactory, ezpRestMvcResult $result): void
+    {
+        if ($endpointFactory instanceof EndpointFactory\NodeClassesEndpointFactory) {
+            $db = \eZDB::instance();
+            $remoteId = $db->escapeString($result->variables['id']);
+            $query = "SELECT node_id FROM ezcontentobject_tree 
+                WHERE contentobject_id in (SELECT id FROM ezcontentobject WHERE remote_id = '$remoteId') 
+                AND main_node_id = node_id";
+            $nodeListArray = $db->arrayQuery($query);
+            $nodeID = $nodeListArray[0]['node_id'] ?? 0;
+            header("Cache-Control: public, must-revalidate, max-age=10, s-maxage=259200"); //@todo make configurable
+            header("X-Cache-Tags: node-{$nodeID}");
+            header("Vary: X-User-Context-Hash");
+            header("Vary: Accept-Language");
+        }
+    }
+
+    public function hasResponseHeaders(EndpointFactory $endpointFactory, ezpRestMvcResult $result): bool
+    {
+        return $endpointFactory instanceof EndpointFactory\NodeClassesEndpointFactory;
+    }
 
     public function getSummary()
     {

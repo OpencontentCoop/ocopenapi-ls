@@ -6,11 +6,29 @@ use Opencontent\OpenApi\EndpointFactory;
 use Opencontent\OpenApi\Exceptions\InternalException;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\OperationFactory;
+use Opencontent\OpenApi\OperationFactory\CacheAwareInterface;
 use Opencontent\Opendata\Api\Values\SearchResults;
+use ezpRestMvcResult;
 
-class SearchOperationFactory extends OperationFactory\SearchOperationFactory
+class SearchOperationFactory extends OperationFactory\SearchOperationFactory implements CacheAwareInterface
 {
     use ContentRepositoryTrait;
+
+    public function setResponseHeaders(EndpointFactory $endpointFactory, ezpRestMvcResult $result): void
+    {
+        if ($endpointFactory instanceof EndpointFactory\NodeClassesEndpointFactory) {
+            $nodeID = (int)$endpointFactory->getNodeId();
+            header("Cache-Control: public, must-revalidate, max-age=10, s-maxage=259200"); //@todo make configurable
+            header("X-Cache-Tags: node-{$nodeID}");
+            header("Vary: X-User-Context-Hash");
+            header("Vary: Accept-Language");
+        }
+    }
+
+    public function hasResponseHeaders(EndpointFactory $endpointFactory, ezpRestMvcResult $result): bool
+    {
+        return $endpointFactory instanceof EndpointFactory\NodeClassesEndpointFactory;
+    }
 
     public function getSummary()
     {
