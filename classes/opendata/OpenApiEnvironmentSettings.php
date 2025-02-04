@@ -170,7 +170,7 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
             $payloadBuilder->removeAction(PayloadBuilder::TRANSLATE);
             $this->language = $currentLanguage;
         }
-        $payloadBuilder->setLanguages($allLanguages);
+        $payloadBuilder->setLanguages([$this->language]);
         $payloadArray = $payloadBuilder->getArrayCopy();
 
         $this->payloadAction = PayloadBuilder::UPDATE;
