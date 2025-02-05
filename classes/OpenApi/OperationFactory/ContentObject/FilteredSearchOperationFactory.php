@@ -63,7 +63,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                     if (!empty($values) && !empty($values[0])) {
                         $values = array_map(function ($value) {
                             $value = addcslashes($value, '\'()[]"');
-                            return '"' . $value . '"';
+                            return '\'"' . $value . '"\'';
                         }, $values);
                         $query[] = $filter['queryField'] . ' in [' . implode(',', $values) . ']';
                     }
