@@ -20,7 +20,7 @@ class ListOperationFactory extends SearchOperationFactory implements CacheAwareI
 
     public function setResponseHeaders(EndpointFactory $endpointFactory, ezpRestMvcResult $result): void
     {
-        header("Cache-Control: public, must-revalidate, max-age=600, s-maxage=600"); //@todo make configurable
+        header("Cache-Control: public, must-revalidate, s-maxage=600"); //@todo make configurable
         header("X-Cache-Tags: tags");
         header("Vary: Accept-Language");
     }
@@ -80,7 +80,10 @@ class ListOperationFactory extends SearchOperationFactory implements CacheAwareI
     protected function generateSearchParameters()
     {
         return [
-            new OA\Parameter('term', OA\Parameter::IN_QUERY, 'Search by term', [
+            new OA\Parameter('term', OA\Parameter::IN_QUERY, 'List by term', [
+                'schema' => $this->generateSchemaProperty(['type' => 'string', 'nullable' => true]),
+            ]),
+            new OA\Parameter('search', OA\Parameter::IN_QUERY, 'Search by term', [
                 'schema' => $this->generateSchemaProperty(['type' => 'string', 'nullable' => true]),
             ]),
             new OA\Parameter('limit', OA\Parameter::IN_QUERY, 'Limit to restrict the number of entries on a page', [

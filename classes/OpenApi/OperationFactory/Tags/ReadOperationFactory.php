@@ -14,7 +14,7 @@ class ReadOperationFactory extends BaseReadOperationFactory implements CacheAwar
 
     public function setResponseHeaders(EndpointFactory $endpointFactory, ezpRestMvcResult $result): void
     {
-        header("Cache-Control: public, must-revalidate, max-age=600, s-maxage=600"); //@todo make configurable
+        header("Cache-Control: public, must-revalidate, s-maxage=600"); //@todo make configurable
         header("X-Cache-Tags: tags");
         header("Vary: Accept-Language");
     }
