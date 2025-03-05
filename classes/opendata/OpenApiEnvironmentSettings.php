@@ -148,40 +148,12 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
         if (!$object instanceof eZContentObject) {
             throw new NotFoundException($data['_id']);
         }
-
-        $payloadArray = $payloadBuilder->getArrayCopy();
-
-        // handle translations
-        $allLanguages = array_keys($object->allLanguages());
-        if (count($allLanguages) > 1 || $allLanguages[0] !== $this->language) {
-            $content = Content::createFromEzContentObject($object);
-            $currentLanguage = $this->language;
-            $payloadBuilder->appendAction(PayloadBuilder::TRANSLATE);
-            foreach ($allLanguages as $language) {
-                if ($language != $currentLanguage) {
-                    $this->language = $language;
-                    $localizedPayload = $this->filterContent($content);
-                    $schemaFactory->serializePayload($payloadBuilder, $localizedPayload, $this->language);
-                }
-            }
-            if (!in_array($currentLanguage, $allLanguages)) {
-                $allLanguages[] = $currentLanguage;
-            }
-            $payloadBuilder->removeAction(PayloadBuilder::TRANSLATE);
-            $this->language = $currentLanguage;
-        }
         $payloadBuilder->setLanguages([$this->language]);
         $payloadArray = $payloadBuilder->getArrayCopy();
 
         $this->payloadAction = PayloadBuilder::UPDATE;
         if (!isset($payloadArray['data'])){
-            $payloadArray['data'] = array_fill_keys($allLanguages, []);
-        }else{
-            foreach ($allLanguages as $language){
-                if (!isset($payloadArray['data'][$language])){
-                    $payloadArray['data'][$language] = [];
-                }
-            }
+            $payloadArray['data'] = [$this->language => []];
         }
 
         return new ContentUpdateStruct(
