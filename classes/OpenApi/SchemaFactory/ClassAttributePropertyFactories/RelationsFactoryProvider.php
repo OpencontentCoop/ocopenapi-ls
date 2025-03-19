@@ -145,7 +145,9 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
         $relationsContent = (array)$this->getContent($content, $locale);
         $nameList = [];
         foreach ($relationsContent as $item) {
-            $nameList[$item['id']] = $item['name'][$locale] ?? $item['name']['ita-IT'];
+            if (isset($item['id'])) {
+                $nameList[$item['id']] = $item['name'][$locale] ?? $item['name']['ita-IT'];
+            }
         }
         // refetch avoiding unsynchronized remote_ids
         $identifier = $this->attribute->attribute('identifier');
