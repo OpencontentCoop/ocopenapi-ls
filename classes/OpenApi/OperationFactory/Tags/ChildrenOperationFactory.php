@@ -31,6 +31,7 @@ class ChildrenOperationFactory extends ListOperationFactory implements ChildEndp
     public function handleCurrentRequest(EndpointFactory $endpointFactory)
     {
         $parameters = $this->getCurrentRequestParameters();
+        $parameters['main_only'] = true;
         $items = $this->fetchTagList($parameters);
         $count = $this->fetchTagCount($parameters);
         $path = $endpointFactory->getBaseUri() . $endpointFactory->getPath();

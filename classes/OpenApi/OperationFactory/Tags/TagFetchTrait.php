@@ -17,6 +17,9 @@ trait TagFetchTrait
         $locale = $this->getCurrentRequestLanguage();
 
         $customConds = " WHERE ";
+        if (isset($parameters['main_only']) && $parameters['main_only']) {
+            $customConds .= " eztags.main_tag_id = 0 AND ";
+        }
         $customConds .= " eztags.id = eztags_keyword.keyword_id ";
         $customConds .= " AND " . eZContentLanguage::languagesSQLFilter('eztags') . " ";
         $customConds .= " AND eztags_keyword.locale = '" . $db->escapeString($locale) . "' ";
@@ -35,7 +38,7 @@ trait TagFetchTrait
 
         $byTerm = $parameters['term'] ?? null;
         if ($byTerm) {
-            $customConds .= " AND eztags_keyword.keyword ilike '" . $db->escapeString($byTerm) . "' ";
+            $customConds .= " AND eztags_keyword.keyword ilike '%" . $db->escapeString($byTerm) . "%' ";
         }
         $likeTerm = $parameters['search'] ?? null;
         if ($likeTerm) {
@@ -71,7 +74,7 @@ trait TagFetchTrait
     protected function fetchTagList(array $parameters): array
     {
         $limits = [
-            'limit' => intval($parameters['limit'] ?? 10),
+            'limit' => intval($parameters['limit'] ?? 20),
             'offset' => intval($parameters['offset'] ?? 0),
         ];
 
