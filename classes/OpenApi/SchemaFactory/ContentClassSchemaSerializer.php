@@ -273,6 +273,7 @@ class ContentClassSchemaSerializer
                     'ocevent' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\EventFactoryProvider',
                     'ocgdpr' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\GdprFactoryProvider',
                     'openpabootstrapitaliaicon' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\BootstrapItaliaIconFactoryProvider',
+                    'ezidentifier' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\IdentifierFactoryProvider',
 
                     // ignore
                     'openparole' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
