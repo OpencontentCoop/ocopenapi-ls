@@ -74,6 +74,9 @@ class TagFilteredSchemaBuilder implements SchemaBuilderInterface
                             }
                         }
                     }
+                    if (isset($path['get']['responses'][200]['content']['application/json']['schema']['properties']['items']['items']['$ref'])) {
+                        $filteredRefs[] = $path['get']['responses'][200]['content']['application/json']['schema']['properties']['items']['items']['$ref'];
+                    }
 
                     $filteredSchema->paths[$name] = $path;
                     break;
@@ -83,6 +86,7 @@ class TagFilteredSchemaBuilder implements SchemaBuilderInterface
 
         $filteredRefs = array_unique($filteredRefs);
         $schemas = $filteredSchema->components['schemas'];
+
         foreach ($schemas as $name => $schema) {
             if (!in_array('#/components/schemas/' . $name, $filteredRefs)
                 && !in_array('#/components/schemas/Typed' . $name, $filteredRefs)) {

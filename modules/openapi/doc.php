@@ -5,12 +5,14 @@ use Opencontent\OpenApi\Loader;
 /** @var eZModule $module */
 $module = $Params['Module'];
 $section = $Params['Section'];
+$http = eZHTTPTool::instance();
 
 $tpl = eZTemplate::factory();
 $settings = Loader::instance()->getSettingsProvider()->provideSettings();
 $useSections = count($settings->documentationSections) > 0;
 $tpl->setVariable('sections', $settings->documentationSections);
 $currentSection = false;
+
 if (!$useSections && !empty($section)){
     $module->redirectTo('openapi/doc');
     return;
@@ -20,7 +22,9 @@ if (!empty($section) && $settings->hasDocumentationSection($section)) {
 }
 
 $tpl->setVariable('endpoint_url', $settings->endpointUrl . '/');
-if ($currentSection) {
+if ($http->hasGetVariable('tag')) {
+    $tpl->setVariable('endpoint_url', $settings->endpointUrl . '/?tag=' . $http->getVariable('tag'));
+} elseif ($currentSection) {
     $tpl->setVariable('show_section_index', false);
     $tpl->setVariable('section', $currentSection);
     $tpl->setVariable('endpoint_url', $settings->endpointUrl . '/?section=' . $section);
