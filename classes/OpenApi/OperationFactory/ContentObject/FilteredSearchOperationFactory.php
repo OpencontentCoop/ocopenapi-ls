@@ -247,6 +247,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
 
                                 switch ($field['dataType']) {
                                     case eZTagsType::DATA_TYPE_STRING;
+                                        $enum = $schema->properties[$identifier]['enum'] ?? null;
                                         $this->filters[$identifier . '[]'] = [
                                             'in' => OA\Parameter::IN_QUERY,
                                             'description' => sprintf('Filter by %s field', $identifier),
@@ -254,12 +255,14 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                                                 'type' => 'array',
                                                 'items' => [
                                                     'type' => 'string',
-                                                    'enum' => $schema->properties[$identifier]['enum'] ?? [],
                                                 ],
                                             ],
                                             'queryField' => $identifier,
                                             'dataType' => $field['dataType'],
                                         ];
+                                        if ($enum){
+                                            $this->filters[$identifier . '[]']['schema']['items']['enum'] = $enum;
+                                        }
                                         break;
 
                                     case eZObjectRelationListType::DATA_TYPE_STRING;
@@ -279,16 +282,19 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                                         break;
 
                                     case eZSelectionType::DATA_TYPE_STRING:
+                                        $enum = $schema->properties[$identifier]['enum'] ?? null;
                                         $this->filters[$identifier] = [
                                             'in' => OA\Parameter::IN_QUERY,
                                             'description' => sprintf('Filter by %s field', $identifier),
                                             'schema' => [
                                                 'type' => 'string',
-                                                'enum' => $schema->properties[$identifier]['enum'] ?? [],
                                             ],
                                             'queryField' => $identifier,
                                             'dataType' => $field['dataType'],
                                         ];
+                                        if ($enum){
+                                            $this->filters[$identifier]['schema']['enum'] = $enum;
+                                        }
                                         break;
 
                                     case OCEventType::DATA_TYPE_STRING:

@@ -10,8 +10,7 @@ class ApiStatusOperationFactory extends GetOperationFactory
     public function handleCurrentRequest(EndpointFactory $endpointFactory)
     {
         $result = new \ezpRestMvcResult();
-
-        $result->variables = ['status' => 'ok'];
+        $result->variables = ['status' => 200];
 
         return $result;
     }
@@ -23,7 +22,7 @@ class ApiStatusOperationFactory extends GetOperationFactory
     {
         return [
             '200' => new OA\Response('Successful response', [
-                'application/json' => new OA\MediaType([
+                'application/problem+json' => new OA\MediaType([
                     'schema' => $this->generateSchemasReference()
                 ])
             ], $this->generateResponseHeaders()),

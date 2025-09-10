@@ -60,6 +60,7 @@ class CachedSchemaBuilder implements SchemaBuilderInterface, CacheCleanable
                     'license' => $data['info']['license'],
                     'xApiId' => $data['info']['x-api-id'],
                     'xAudience' => $data['info']['x-audience'],
+                    'xsummary' => $data['info']['x-summary'],
                 ]
             ),
             $data['paths'],

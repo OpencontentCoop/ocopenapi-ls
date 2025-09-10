@@ -19,7 +19,7 @@ class MatrixSchemaFactory extends AbstractClassAttributeSchemaFactory
         $schema->title = $this->name;
         $schema->type = 'object';
         $schema->properties = [];
-        $schema->properties['index'] = $this->generateSchemaProperty(['type' => 'integer', 'title' => 'Item index']);
+        $schema->properties['index'] = $this->generateSchemaProperty(['type' => 'integer', 'format' => 'int32', 'title' => 'Item index']);
         $required = [];
         foreach ($columns as $column) {
             $schema->properties[$column['identifier']] = $this->generateSchemaProperty(['type' => 'string', 'title' => $column['name']]);

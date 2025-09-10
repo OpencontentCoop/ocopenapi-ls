@@ -21,11 +21,11 @@ class FloatFactoryProvider extends ContentClassAttributePropertyFactory
         $max = $this->attribute->attribute(\eZFloatType::MAX_FIELD);
 
         if ($min) {
-            $schema["minimum"] = $min;
+            $schema["minimum"] = (int)$min;
         }
 
         if ($max) {
-            $schema["maximum"] = $max;
+            $schema["maximum"] = (int)$max;
         }
 
         return $schema;

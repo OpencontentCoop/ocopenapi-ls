@@ -148,7 +148,7 @@ class Loader
                 $tags = $section['tags'] ?? false;
                 $readOnly = $section['read_only'] ?? false;
                 if ($tags) {
-                    return new TagFilteredSchemaBuilder($this->schemaBuilder, $tags, $section['title'], $readOnly === 'true');
+                    return new TagFilteredSchemaBuilder($this->schemaBuilder, $tags, $section['title'], ($readOnly === 'true' || $readOnly === true));
                 }
             }
         }elseif (isset($filters['tag'])){

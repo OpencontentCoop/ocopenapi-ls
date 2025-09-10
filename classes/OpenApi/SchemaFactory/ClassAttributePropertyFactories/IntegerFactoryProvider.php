@@ -15,6 +15,7 @@ class IntegerFactoryProvider extends ContentClassAttributePropertyFactory
             $schema['default'] = $default;
         }
         $schema['type'] = 'integer';
+        $schema['format'] = 'int32';
 
         $inputState = $this->attribute->attribute( \eZIntegerType::INPUT_STATE_FIELD );
 
@@ -24,11 +25,11 @@ class IntegerFactoryProvider extends ContentClassAttributePropertyFactory
         if ($inputState != \eZIntegerType::NO_MIN_MAX_VALUE) {
 
             if ($inputState == \eZIntegerType::HAS_MIN_VALUE || $inputState == \eZIntegerType::HAS_MIN_MAX_VALUE) {
-                $schema["minimum"] = $min;
+                $schema["minimum"] = (int)$min;
             }
 
             if ($inputState == \eZIntegerType::HAS_MAX_VALUE || $inputState == \eZIntegerType::HAS_MIN_MAX_VALUE) {
-                $schema["maximum"] = $max;
+                $schema["maximum"] = (int)$max;
             }
         }
 

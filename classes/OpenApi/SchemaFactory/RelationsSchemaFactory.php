@@ -38,7 +38,7 @@ class RelationsSchemaFactory extends AbstractClassAttributeSchemaFactory
         $schema->properties = [
             'id' => $this->generateSchemaProperty(['type' => 'string', 'description' => 'Resource Id', 'readOnly' => true]),
             'uri' => $this->generateSchemaProperty(['type' => 'string', 'description' => $uriDescription]),
-            'priority' => $this->generateSchemaProperty(['type' => 'integer', 'description' => 'Priority']),
+            'priority' => $this->generateSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Priority']),
         ];
 
         return $schema;

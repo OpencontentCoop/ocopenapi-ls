@@ -91,6 +91,7 @@ class RelationsFactoryProvider extends ContentClassAttributePropertyFactory
                 "priority" => [
                     "title" => "Priority",
                     "type" => "integer",
+                    'format' => 'int32',
                 ],
             ],
             "required" => [

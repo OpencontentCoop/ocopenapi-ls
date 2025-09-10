@@ -23,7 +23,7 @@ trait SchemaBuilderToolsTrait
     }
 
     /**
-     * Translates a camel case string into a string with underscores (e.g. firstName -&gt; first_name)
+     * Translates a camel case string into a string with underscores (e.g. firstName -> first_name)
      * @param string $str String in camel case format
      * @param string $separator
      * @return    string            $str Translated into underscore format

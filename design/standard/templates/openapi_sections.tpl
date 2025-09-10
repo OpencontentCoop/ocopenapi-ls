@@ -16,7 +16,8 @@
                                    href="{concat('/openapi/doc/', $identifier)|ezurl(no)}">{$section.link_label|wash()}</a>
                                 {if is_set($section.info_tag)}
                                     <a class="btn btn-link" href="#"
-                                       data-copy2clipboard="{concat('/openapi/audience/', $identifier)|ezurl(no, full)}">
+                                       data-copy2clipboard="{concat('/openapi/audience/', $identifier)|ezurl(no, full)}"
+                                       title="{concat('/openapi/audience/', $identifier)|ezurl(no, full)}" >
                                         <i class="fa fa-info-circle"></i> <code>AUDIENCE</code></span></a>
                                 {/if}
                                 <a class="btn btn-link"

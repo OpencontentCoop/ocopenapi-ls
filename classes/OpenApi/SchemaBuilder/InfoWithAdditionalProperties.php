@@ -8,4 +8,6 @@ class InfoWithAdditionalProperties extends OA\Info
 {
     public $xApiId;
     public $xAudience;
+
+    public $xsummary;
 }

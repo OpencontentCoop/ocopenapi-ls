@@ -6,6 +6,7 @@ use erasys\OpenApi\Spec\v3 as OA;
 use Opencontent\OpenApi\Exceptions\InvalidPayloadException;
 use Opencontent\OpenApi\Exceptions\NotYetImplementedException;
 use Opencontent\OpenApi\OperationFactory\SchemaReferenceGeneratorTrait;
+use Opencontent\OpenApi\SchemaBuilder\Operation;
 use Opencontent\OpenApi\SchemaBuilder\SchemaBuilderToolsTrait;
 
 abstract class OperationFactory implements \JsonSerializable, \Serializable
@@ -153,7 +154,7 @@ abstract class OperationFactory implements \JsonSerializable, \Serializable
      */
     public function generateOperation()
     {
-        $operationDefinition = new OA\Operation(
+        $operationDefinition = new Operation(
             $this->generateResponseList(),
             (string)$this->getId(),
             (string)$this->getSummary(),
@@ -187,15 +188,15 @@ abstract class OperationFactory implements \JsonSerializable, \Serializable
             $headers = [
                 'X-RateLimit-Limit' => new OA\Header(
                     'The maximum number of requests that the client is allowed to make in this window.',
-                    ['schema' => new OA\Schema(['type' => 'integer'])]
+                    ['schema' => new OA\Schema(['type' => 'integer', 'format' => 'int32',])]
                 ),
                 'X-RateLimit-Remaining' => new OA\Header(
                     'The number of requests allowed in the current window.',
-                    ['schema' => new OA\Schema(['type' => 'integer'])]
+                    ['schema' => new OA\Schema(['type' => 'integer', 'format' => 'int32',])]
                 ),
                 'X-RateLimit-Reset' => new OA\Header(
                     'The relative time in seconds when the rate limit window will be reset.',
-                    ['schema' => new OA\Schema(['type' => 'integer'])]
+                    ['schema' => new OA\Schema(['type' => 'integer', 'format' => 'int32',])]
                 ),
             ];
         }

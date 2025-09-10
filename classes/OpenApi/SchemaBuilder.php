@@ -89,6 +89,7 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
     {
         $contact = new OA\Contact();
         $contact->email = $this->settings->contactEmail;
+        $contact->name = \eZINI::instance()->variable('SiteSettings', 'SiteName');
 
         return new InfoWithAdditionalProperties(
             (string)$this->settings->apiTitle,
@@ -106,6 +107,7 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
                 'xApiId' => new OpenApiBase\ExtensionProperty('api-id', (string)$this->settings->apiId),
                 //@see https://opensource.zalando.com/restful-api-guidelines/#219
                 'xAudience' => new OpenApiBase\ExtensionProperty('audience', 'external-public'),
+                'xsummary' => (string)$this->settings->apiDescription,
             ]
         );
     }
@@ -226,6 +228,12 @@ class SchemaBuilder extends EndpointFactoryProvider implements SchemaBuilderInte
                         }
                     }
                 }
+            }
+        }
+
+        foreach ($schemas as $schema) {
+            if (empty($schema->required)) {
+                $schema->required = null;
             }
         }
 

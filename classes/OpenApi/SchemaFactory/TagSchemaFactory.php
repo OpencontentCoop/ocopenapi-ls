@@ -34,7 +34,8 @@ class TagSchemaFactory extends SchemaFactory
                 'nullable' => true,
             ]),
             'voc' => $this->generateSchemaProperty([
-                'type' => 'uri',
+                'type' => 'string',
+                'format' => 'uri',
                 'description' => 'Controlled vocabulary link',
                 'nullable' => true,
             ]),
@@ -76,9 +77,7 @@ class TagSchemaFactory extends SchemaFactory
                 ]),
             ]),
             'parent' => [
-                'allOf' => [
-                    '$ref' => '#/components/schemas/' . $this->name,
-                ],
+                'allOf' => [new OA\Reference('#/components/schemas/' . $this->name)],
                 'nullable' => true,
             ],
         ];

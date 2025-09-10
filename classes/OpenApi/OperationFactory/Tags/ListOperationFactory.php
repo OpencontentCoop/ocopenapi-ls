@@ -90,6 +90,7 @@ class ListOperationFactory extends SearchOperationFactory implements CacheAwareI
                 'schema' => $this->generateSchemaProperty(
                     [
                         'type' => 'integer',
+                        'format' => 'int32',
                         'minimum' => 1,
                         'maximum' => static::MAX_LIMIT,
                         'default' => static::DEFAULT_LIMIT,
@@ -102,7 +103,7 @@ class ListOperationFactory extends SearchOperationFactory implements CacheAwareI
                 OA\Parameter::IN_QUERY,
                 'Numeric offset of the first element provided on a page representing a collection request',
                 [
-                    'schema' => $this->generateSchemaProperty(['type' => 'integer']),
+                    'schema' => $this->generateSchemaProperty(['type' => 'integer', 'format' => 'int32',]),
                 ]
             ),
             $this->generateHeaderLanguageParameter(),
