@@ -15,7 +15,7 @@ class PublishedFactoryProvider extends ContentMetaPropertyFactory
     {
         return [
             "type" => "string",
-            "format" => "date",
+            "format" => "date-time",
             "description" => \ezpI18n::tr( 'ocopenapi',"Resource publication date")
         ];
     }

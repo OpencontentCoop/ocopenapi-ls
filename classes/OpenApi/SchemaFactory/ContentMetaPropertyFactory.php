@@ -17,10 +17,29 @@ class ContentMetaPropertyFactory
      */
     protected $contextEndpoint;
 
-    public function __construct(\eZContentClass $class, $metaIdentifier)
-    {
+    /**
+     * @var array
+     */
+    private $properties;
+
+    /**
+     * @var false
+     */
+    private $required;
+
+    public function __construct(
+        \eZContentClass $class,
+        string $metaIdentifier,
+        array $properties = null,
+        bool $required = false
+    ) {
         $this->class = $class;
         $this->metaIdentifier = $metaIdentifier;
+        $this->properties = $properties ?? [
+            "type" => 'string',
+            "description" => $this->metaIdentifier
+        ];
+        $this->required = $required;
     }
 
     /**
@@ -49,15 +68,12 @@ class ContentMetaPropertyFactory
      */
     public function provideProperties()
     {
-        return [
-            "type" => "string",
-            "description" => $this->metaIdentifier
-        ];
+        return $this->properties;
     }
 
     public function isRequired()
     {
-        return false;
+        return $this->required;
     }
 
     public function serializeValue(Content $content, $locale)

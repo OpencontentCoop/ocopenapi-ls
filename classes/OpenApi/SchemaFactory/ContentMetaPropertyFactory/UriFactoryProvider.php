@@ -21,8 +21,9 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
     {
         return [
             "type" => "string",
-            "description" => \ezpI18n::tr( 'ocopenapi', 'Resource Uniform Resource Identifier'),
+            "description" => \ezpI18n::tr( 'ocopenapi', 'Api Uniform Resource Identifier'),
             "readOnly" => true,
+            "nullable" => true,
         ];
     }
 
@@ -42,9 +43,9 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
     {
         $pathArray = explode('/', $content->metadata->assignedNodes[0]['path_string']);
         $parentNode = $content->metadata->parentNodes[0];
-        return $this->getResourceEndpointPathForClassIdentifier($content->metadata->classIdentifier, $parentNode, $pathArray)
-            . $content->metadata->remoteId
-            . '#' . \eZCharTransform::instance()->transformByGroup($content->metadata->name[$locale], 'urlalias');
+        $resourcePath = $this->getResourceEndpointPathForClassIdentifier($content->metadata->classIdentifier, $parentNode, $pathArray);
+        return $resourcePath ? $resourcePath . $content->metadata->remoteId
+            . '#' . \eZCharTransform::instance()->transformByGroup($content->metadata->name[$locale], 'urlalias') : null;
     }
 
     protected function getResourceEndpointPathForClassIdentifier($classIdentifier, $parentNode, $pathArray)
@@ -59,9 +60,11 @@ class UriFactoryProvider extends ContentMetaPropertyFactory
 
             return Loader::instance()->getSettingsProvider()->provideSettings()->endpointUrl . $resourceEndpointPath . '/';
         }
-
+        if (!is_numeric($parentNode)){
+            $parentNode = $parentNode['id'] ?? 0;
+        }
         if (!isset(self::$resourceEndpointPaths[$classIdentifier.$parentNode])) {
-            self::$resourceEndpointPaths[$classIdentifier.$parentNode] = '/';
+            self::$resourceEndpointPaths[$classIdentifier.$parentNode] = null;
             $endpoint = Loader::instance()->getEndpointProvider()->getEndpointFactoryCollection()->findOneByCallback(function ($endpoint) use ($classIdentifier, $pathArray) {
                 if ($endpoint instanceof NodeClassesEndpointFactory) {
                     $parentNodeId = $endpoint->getNodeId();

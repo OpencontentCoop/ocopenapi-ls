@@ -22,11 +22,7 @@ class ContentClassSchemaSerializer
 
     private static $schemas = [];
 
-    private static $factories = [];
-
-    private static $metas = [];
-
-    private static $properties = [];
+    private static $factoriesLoaders = [];
 
     /**
      * @var NodeClassesEndpointFactory
@@ -53,7 +49,7 @@ class ContentClassSchemaSerializer
     {
         if (!isset(self::$schemas[$classIdentifier])) {
             $class = $this->loadClass($classIdentifier);
-            $factories = $this->loadFactories($class, $schemaName);
+            $factories = static::getFactoriesLoader($class)->loadFactories();
             $properties = [];
             $deprecateCategories = [];
             if (eZINI::instance('ocopenapi.ini')->hasVariable('ClassAttributeSettings', 'DeprecateAttributeCategories')) {
@@ -117,99 +113,12 @@ class ContentClassSchemaSerializer
 
     /**
      * @param eZContentClass $class
-     * @param string $schemaName
-     * @return ContentClassAttributePropertyFactory[]|ContentMetaPropertyFactory[]
-     */
-    private function loadFactories(eZContentClass $class, $schemaName)
-    {
-        if (!isset(self::$factories[$class->attribute('identifier')][$schemaName])) {
-            self::$factories[$class->attribute('identifier')][$schemaName] = [];
-
-            $metaFields = [
-                'remoteId',
-                'uri',
-                'published',
-                'modified',
-            ];
-
-            if (eZINI::instance('ocopenapi.ini')->hasVariable('ContentMetaSettings', 'ContentMetaPropertyFactories')) {
-                $keys = array_keys(eZINI::instance('ocopenapi.ini')->variable('ContentMetaSettings', 'ContentMetaPropertyFactories'));
-                $classIdentifier = $class->attribute('identifier');
-                foreach ($keys as $field) {
-                    if (strpos($field, '/') !== false) {
-                        if (strpos($field, $class->attribute('identifier').'/') !== false) {
-                            $metaFields[] = str_replace($classIdentifier . '/', '', $field);
-                        }
-                    }else{
-                        $metaFields[] = $field;
-                    }
-                }
-            }
-            foreach ($metaFields as $identifier) {
-                $factory = static::loadContentMetaPropertyFactory($class, $identifier);
-                if ($factory instanceof ContentMetaPropertyFactory) {
-                    self::$factories[$class->attribute('identifier')][$schemaName][$factory->providePropertyIdentifier()] = $factory;
-                }
-            }
-
-            foreach ($class->dataMap() as $identifier => $attribute) {
-                $factory = self::loadContentClassAttributePropertyFactory($class, $attribute);
-                if ($factory instanceof ContentClassAttributePropertyFactory) {
-                    self::$factories[$class->attribute('identifier')][$schemaName][$factory->providePropertyIdentifier()] = $factory;
-                }
-            }
-        }
-
-        return self::$factories[$class->attribute('identifier')][$schemaName];
-    }
-
-    /**
-     * @param eZContentClass $class
      * @param $identifier
      * @return ContentMetaPropertyFactory|false
      */
     public static function loadContentMetaPropertyFactory($class, $identifier)
     {
-        if (!isset(self::$metas[$class->attribute('id') . $identifier])) {
-
-            self::$metas[$class->attribute('id') . $identifier] = false;
-
-            $settings = [];
-            if (eZINI::instance('ocopenapi.ini')->hasGroup('ContentMetaSettings')) {
-                $settings = eZINI::instance('ocopenapi.ini')->group('ContentMetaSettings');
-            }
-
-            $customMetaPropertyFactory = 'null';
-            $classIdentifier = $class->attribute('identifier');
-            if (isset($settings['ContentMetaPropertyFactories'][$classIdentifier . '/' . $identifier])) {
-                $customMetaPropertyFactory = $settings['ContentMetaPropertyFactories'][$classIdentifier . '/' . $identifier];
-            } elseif (isset($settings['ContentMetaPropertyFactories'][$identifier])) {
-                $customMetaPropertyFactory = $settings['ContentMetaPropertyFactories'][$identifier];
-            } else {
-
-                $defaults = [
-                    'remoteId' => '\Opencontent\OpenApi\SchemaFactory\ContentMetaPropertyFactory\RemoteIdFactoryProvider',
-                    'uri' => '\Opencontent\OpenApi\SchemaFactory\ContentMetaPropertyFactory\UriFactoryProvider',
-                    'published' => '\Opencontent\OpenApi\SchemaFactory\ContentMetaPropertyFactory\PublishedFactoryProvider',
-                    'modified' => '\Opencontent\OpenApi\SchemaFactory\ContentMetaPropertyFactory\ModifiedFactoryProvider',
-                ];
-
-                if (isset($defaults[$identifier])) {
-                    $customMetaPropertyFactory = $defaults[$identifier];
-                }
-            }
-            if (class_exists($customMetaPropertyFactory)) {
-                self::$metas[$class->attribute('id') . $identifier] = new $customMetaPropertyFactory($class, $identifier);
-            } else {
-                Logger::instance()->error("ContentMetaPropertyFactory not found", ['identifier' => $identifier, 'method' => __METHOD__]);
-                $fallbackFactory = new ContentMetaPropertyFactory($class, $identifier);
-                if ($fallbackFactory->isRequired()) {
-                    self::$metas[$class->attribute('id') . $identifier] = $fallbackFactory;
-                }
-            }
-        }
-
-        return self::$metas[$class->attribute('id') . $identifier];
+        return static::getFactoriesLoader($class)->loadContentMetaPropertyFactory($identifier);
     }
 
     /**
@@ -219,97 +128,13 @@ class ContentClassSchemaSerializer
      */
     public static function loadContentClassAttributePropertyFactory($class, $attribute)
     {
-        if (!isset(self::$properties[$attribute->attribute('id')])) {
-            self::$properties[$attribute->attribute('id')] = false;
-
-            $settings = [];
-            if (eZINI::instance('ocopenapi.ini')->hasGroup('ClassAttributeSettings')) {
-                $settings = eZINI::instance('ocopenapi.ini')->group('ClassAttributeSettings');
-            }
-
-            $customAttributePropertyFactory = 'null';
-
-            $classIdentifier = $class->attribute('identifier');
-            $identifier = $attribute->attribute('identifier');
-            $dataType = $attribute->attribute('data_type_string');
-
-            if (isset($settings['ClassAttributePropertyFactories'][$classIdentifier . '/' . $identifier])) {
-                $customAttributePropertyFactory = $settings['ClassAttributePropertyFactories'][$classIdentifier . '/' . $identifier];
-            } elseif (isset($settings['ClassAttributePropertyFactories'][$identifier])) {
-                $customAttributePropertyFactory = $settings['ClassAttributePropertyFactories'][$identifier];
-            } elseif (isset($settings['ClassAttributePropertyFactories'][$dataType])) {
-                $customAttributePropertyFactory = $settings['ClassAttributePropertyFactories'][$dataType];
-            } else {
-
-                $defaults = [
-                    'ezselection' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\SelectionFactoryProvider',
-                    'ezprice' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\PriceFactoryProvider',
-                    'ezkeyword' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\KeywordsFactoryProvider',
-                    'eztags' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\TagsFactoryProvider',
-                    'ezgmaplocation' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\GeoFactoryProvider',
-                    'ezdate' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\DateFactoryProvider',
-                    'ezdatetime' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\DateTimeFactoryProvider',
-                    'eztime' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\TimeFactoryProvider',
-                    'ezmatrix' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\MatrixFactoryProvider',
-                    'ezxmltext' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\EzXmlFactoryProvider',
-                    'ezauthor' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\AuthorFactoryProvider',
-                    'ezobjectrelation' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\RelationFactoryProvider',
-                    'ezobjectrelationlist' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\RelationsFactoryProvider',
-                    'ezbinaryfile' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\FileFactoryProvider',
-                    'ezimage' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\ImageFactoryProvider',
-                    //'ezpage' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\PageFactoryProvider',
-                    'ezboolean' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\BooleanFactoryProvider',
-                    'ezuser' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\UserFactoryProvider',
-                    'ezfloat' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\FloatFactoryProvider',
-                    'ezinteger' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\IntegerFactoryProvider',
-                    'ezstring' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\StringFactoryProvider',
-                    'ezsrrating' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\RatingFactoryProvider',
-                    'ezemail' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\EmailFactoryProvider',
-                    'ezcountry' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\CountryFactoryProvider',
-                    'ezurl' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\UrlFactoryProvider',
-                    'eztext' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\TextFactoryProvider',
-                    'ocmultibinary' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\MultiFileFactoryProvider',
-                    'ezmedia' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\MediaFactoryProvider',
-                    'ocevent' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\EventFactoryProvider',
-                    'ocgdpr' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\GdprFactoryProvider',
-                    'openpabootstrapitaliaicon' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\BootstrapItaliaIconFactoryProvider',
-                    'ezidentifier' => '\Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory\IdentifierFactoryProvider',
-
-                    // ignore
-                    'openparole' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
-                    'openpareverserelationlist' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
-                    'ezpage' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
-                    'ezpaex' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
-                    'occhart' => '\Opencontent\OpenApi\SchemaFactory\NullSchemaFactory',
-                ];
-
-                if (isset($defaults[$dataType])) {
-                    $customAttributePropertyFactory = $defaults[$dataType];
-                }
-            }
-
-            if (class_exists($customAttributePropertyFactory)) {
-                self::$properties[$attribute->attribute('id')] = new $customAttributePropertyFactory($class, $attribute);
-            } else {
-                Logger::instance()->error("ContentClassAttributePropertyFactory not found", [
-                    'datatype' => $dataType,
-                    'class' => $classIdentifier,
-                    'attribute' => $identifier,
-                    'method' => __METHOD__
-                ]);
-                $fallbackFactory = new ContentClassAttributePropertyFactory($class, $attribute);
-                if ($fallbackFactory->isRequired()) {
-                    self::$properties[$attribute->attribute('id')] = $fallbackFactory;
-                }
-            }
-        }
-        return self::$properties[$attribute->attribute('id')];
+        return static::getFactoriesLoader($class)->loadContentClassAttributePropertyFactory($attribute);
     }
 
     public function serializeValue($classIdentifier, $schemaName, Content $content, $locale)
     {
         $class = $this->loadClass($classIdentifier);
-        $factories = $this->loadFactories($class, $schemaName);
+        $factories = static::getFactoriesLoader($class)->loadFactories();
         $value = [];
         foreach ($factories as $identifier => $factory) {
             $factory->setContextEndpoint($this->getContextEndpoint());
@@ -322,7 +147,7 @@ class ContentClassSchemaSerializer
     public function serializePayload($classIdentifier, $schemaName, PayloadBuilder $payloadBuilder, array $payload, $locale)
     {
         $class = $this->loadClass($classIdentifier);
-        $factories = $this->loadFactories($class, $schemaName);
+        $factories = static::getFactoriesLoader($class)->loadFactories();
         $errors = [];
         foreach ($factories as $identifier => $factory) {
             if ($factory instanceof ContentMetaPropertyFactory && $payloadBuilder->isAction(PayloadBuilder::TRANSLATE)){
@@ -354,5 +179,37 @@ class ContentClassSchemaSerializer
         if (count($errors) > 0) {
             throw new InvalidPayloadException(implode(', ', $errors));
         }
+    }
+
+    protected static function getFactoriesLoader(eZContentClass $class): ContentClassSchemaSerializerFactoriesLoader
+    {
+        if (!isset(self::$factoriesLoaders[$class->attribute('identifier')])) {
+            $metaProperties = [
+                'remoteId' => null,
+                'uri' => null,
+                'published' => null,
+                'modified' => null,
+            ];
+
+            if (eZINI::instance('ocopenapi.ini')->hasVariable('ContentMetaSettings', 'ContentMetaPropertyFactories')) {
+                $keys = array_keys(
+                    eZINI::instance('ocopenapi.ini')->variable('ContentMetaSettings', 'ContentMetaPropertyFactories')
+                );
+                $classIdentifier = $class->attribute('identifier');
+                foreach ($keys as $field) {
+                    if (strpos($field, '/') !== false) {
+                        if (strpos($field, $class->attribute('identifier') . '/') !== false) {
+                            $metaProperties[] = str_replace($classIdentifier . '/', '', $field);
+                        }
+                    } else {
+                        $metaProperties[$field] = null;
+                    }
+                }
+            }
+            self::$factoriesLoaders[$class->attribute('identifier')] = new ContentClassSchemaSerializerFactoriesLoader(
+                $class, $metaProperties
+            );
+        }
+        return self::$factoriesLoaders[$class->attribute('identifier')];
     }
 }

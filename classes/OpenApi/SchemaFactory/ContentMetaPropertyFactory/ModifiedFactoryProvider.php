@@ -16,7 +16,7 @@ class ModifiedFactoryProvider extends ContentMetaPropertyFactory
     {
         return [
             "type" => "string",
-            "format" => "date",
+            "format" => "date-time",
             "description" => \ezpI18n::tr( 'ocopenapi', "Resource last modification date"),
             "readOnly" => true,
         ];
