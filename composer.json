@@ -14,7 +14,8 @@
         "ezsystems/ezpublish-legacy-installer": "*",
         "erasys/openapi-php": "*",
         "opencontent/ocopendata-ls": "*",
-        "phpseclib/phpseclib": "*"
+        "phpseclib/phpseclib": "*",
+        "benmorel/openapi-schema-to-json-schema": "*"
     },
     "extra": {
         "ezpublish-legacy-extension-name": "ocopenapi"

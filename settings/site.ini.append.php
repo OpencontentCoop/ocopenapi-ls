@@ -16,4 +16,5 @@ PolicyOmitList[]=openapi.json
 PolicyOmitList[]=openapi.yml
 PolicyOmitList[]=openapi/doc
 PolicyOmitList[]=openapi/terms
+PolicyOmitList[]=schemas
 */ ?>

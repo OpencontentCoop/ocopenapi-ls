@@ -3,5 +3,6 @@
 [ModuleSettings]
 ExtensionRepositories[]=ocopenapi
 ModuleList[]=openapi.json
+ModuleList[]=schemas
 
 */ ?>

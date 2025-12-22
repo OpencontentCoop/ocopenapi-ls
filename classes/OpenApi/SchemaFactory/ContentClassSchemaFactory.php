@@ -7,6 +7,7 @@ use Opencontent\OpenApi\EndpointFactory\NodeClassesEndpointFactory;
 use Opencontent\OpenApi\SchemaFactory;
 use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\OpenApi\OperationFactory\ContentObject\PayloadBuilder;
+use BenMorel\OpenApiSchemaToJsonSchema\Convert;
 
 class ContentClassSchemaFactory extends SchemaFactory
 {
@@ -77,6 +78,16 @@ class ContentClassSchemaFactory extends SchemaFactory
         return $this->getSerializer()->generateSchema($this->classIdentifier, $this->name);
     }
 
+    public function generateJsonSchema(): \stdClass
+    {
+        $data = Convert::openapiSchemaToJsonSchema(
+            $this->generateSchema()
+        );
+        $data->{'$schema'} = "http://json-schema.org/draft-04/schema#";
+
+        return $data;
+    }
+
     /**
      * @return OA\RequestBody
      */
@@ -113,5 +124,25 @@ class ContentClassSchemaFactory extends SchemaFactory
     public function serializePayload($payloadBuilder, $payload, $locale)
     {
         $this->getSerializer()->serializePayload($this->classIdentifier, $this->name, $payloadBuilder, $payload, $locale);
+    }
+
+    /**
+     * @param $data
+     * @return array|true true if is valid else array of errors
+     */
+    public function validate($data)
+    {
+        if (class_exists('\JsonSchema\Validator')){
+            $validator = new \JsonSchema\Validator;
+            $data = json_decode(json_encode($data));
+            $validator->validate(
+                $data,
+                $this->generateJsonSchema(),
+                \JsonSchema\Constraints\Constraint::CHECK_MODE_TYPE_CAST
+            );
+            return $validator->isValid() ? true : $validator->getErrors();
+        }
+
+        return true;
     }
 }

@@ -3,6 +3,7 @@
 namespace Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
 
 use Opencontent\OpenApi\SchemaFactory\ContentClassAttributePropertyFactory;
+use Opencontent\Opendata\Api\Values\Content;
 
 class DateFactoryProvider extends ContentClassAttributePropertyFactory
 {
@@ -20,4 +21,10 @@ class DateFactoryProvider extends ContentClassAttributePropertyFactory
         ));
     }
 
+    public function serializeValue(Content $content, $locale)
+    {
+        $dateTime = $this->getContent($content, $locale);
+        $parts = explode('T', $dateTime);
+        return empty($parts[0]) ? null : $parts[0];
+    }
 }

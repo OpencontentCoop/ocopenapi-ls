@@ -39,7 +39,7 @@ class TagsFactoryProvider extends ContentClassAttributePropertyFactory
             ];
             $tagList = $this->getDataSource($this->subtreeLimit);
             if (!empty($tagList)){
-                $schema["enum"] = $tagList;
+                $schema['items']["enum"] = $tagList;
             }
         }
 
