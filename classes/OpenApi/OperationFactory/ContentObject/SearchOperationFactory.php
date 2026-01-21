@@ -79,7 +79,7 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory imp
 
         $query = [];
         if (!empty($searchTerm)) {
-            $query[] = 'q = \'' . addcslashes($searchTerm, '\'()[]"') . '\'';
+            $query[] = 'raw[meta_name_t] = \'' . addcslashes($searchTerm, '\'()[]"') . '\'';
         }
 
         $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';

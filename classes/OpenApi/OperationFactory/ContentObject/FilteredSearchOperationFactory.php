@@ -45,7 +45,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
 
         $searchTerm = $this->getCurrentRequestParameter('searchTerm');
         if (!empty($searchTerm)) {
-            $query[] = 'q = \'' . addcslashes($searchTerm, '\'()[]"') . '\'';
+            $query[] = 'raw[meta_name_t] = \'' . addcslashes($searchTerm, '\'()[]"') . '\'';
         }
 
         $query[] = 'classes [' . implode(',', $endpointFactory->getClassIdentifierList()) . ']';
