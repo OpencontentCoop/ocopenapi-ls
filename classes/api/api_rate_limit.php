@@ -59,7 +59,7 @@ class OpenApiRateLimit
     public static function instance()
     {
         if (self::$instance === null) {
-            self::$instance = new static();
+            self::$instance = new static(); // @phpstan-ignore new.static
             self::$instance->setEnabled(
                 Loader::instance()->getSettingsProvider()->provideSettings()->rateLimitEnabled
             );

@@ -10,7 +10,7 @@ class Logger extends AbstractLogger implements LoggerInterface
 {
     public static function instance()
     {
-        return new static();
+        return new static(); // @phpstan-ignore new.static
     }
 
     public function log($level, $message, array $context = array())

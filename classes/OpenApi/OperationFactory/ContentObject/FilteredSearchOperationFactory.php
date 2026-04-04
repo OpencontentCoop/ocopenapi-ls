@@ -71,7 +71,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
 
                 case eZSelectionType::DATA_TYPE_STRING:
                     $value = $this->getCurrentRequestParameter($name);
-                    if (!empty($values) && is_string($value)) {
+                    if (!empty($value) && is_string($value)) {
                         $query[] = $filter['queryField'] . ' = \'"' . addcslashes($value, '\'()[]"') . '"\'';
                     }
                     break;

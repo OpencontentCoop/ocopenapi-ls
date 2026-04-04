@@ -43,7 +43,7 @@ class JWTManager
             throw new UnauthorizedException('JWT Token not found');
         }
         if (!isset(self::$instances[$token])) {
-            self::$instances[$token] = new static($token, $settings);
+            self::$instances[$token] = new static($token, $settings); // @phpstan-ignore new.static
         }
 
         return self::$instances[$token];
