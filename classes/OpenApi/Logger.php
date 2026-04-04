@@ -25,10 +25,10 @@ class Logger extends AbstractLogger implements LoggerInterface
 
     private function getStringValue($value)
     {
+        $stringValue = '';
         if (is_scalar($value) or method_exists($value, '__toString')) {
             $stringValue = $value;
         }elseif (is_array($value)){
-            $stringValue = '';
             foreach ($value as $index => $item){
                 if (!is_numeric($index)){
                     $stringValue .= $index . ': ';

@@ -185,23 +185,21 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
         $fields = $this->getCurrentRequestParameter('fields');
         if ($fields) {
             $fields = array_map('trim', explode(',', $fields));
-            if (!empty($fields)) {
-                $fieldsMock = array_fill_keys($fields, true);
-                $hits = $result['items'];
-                foreach ($hits as $index => $hit) {
-                    $filteredHit = array_intersect_ukey($hit, $fieldsMock, function ($key1, $key2) {
-                        if ($key1 == $key2) {
-                            return 0;
+            $fieldsMock = array_fill_keys($fields, true);
+            $hits = $result['items'];
+            foreach ($hits as $index => $hit) {
+                $filteredHit = array_intersect_ukey($hit, $fieldsMock, function ($key1, $key2) {
+                    if ($key1 == $key2) {
+                        return 0;
+                    } else {
+                        if ($key1 > $key2) {
+                            return 1;
                         } else {
-                            if ($key1 > $key2) {
-                                return 1;
-                            } else {
-                                return -1;
-                            }
+                            return -1;
                         }
-                    });
-                    $result['items'][$index] = $filteredHit;
-                }
+                    }
+                });
+                $result['items'][$index] = $filteredHit;
             }
         }
 

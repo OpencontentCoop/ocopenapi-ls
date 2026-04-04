@@ -97,21 +97,19 @@ class EmbedReadOperationFactory extends ReadOperationFactory
         $fields = $this->getCurrentRequestParameter('fields');
         if ($fields) {
             $fields = array_map('trim', explode(',', $fields));
-            if (!empty($fields)) {
-                $fieldsMock = array_fill_keys($fields, true);
-                $filteredHit = array_intersect_ukey($resource, $fieldsMock, function ($key1, $key2) {
-                    if ($key1 == $key2) {
-                        return 0;
+            $fieldsMock = array_fill_keys($fields, true);
+            $filteredHit = array_intersect_ukey($resource, $fieldsMock, function ($key1, $key2) {
+                if ($key1 == $key2) {
+                    return 0;
+                } else {
+                    if ($key1 > $key2) {
+                        return 1;
                     } else {
-                        if ($key1 > $key2) {
-                            return 1;
-                        } else {
-                            return -1;
-                        }
+                        return -1;
                     }
-                });
-                $resource = $filteredHit;
-            }
+                }
+            });
+            $resource = $filteredHit;
         }
 
         $result->variables = $resource;

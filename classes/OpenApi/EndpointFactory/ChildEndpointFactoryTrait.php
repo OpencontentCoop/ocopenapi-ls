@@ -21,7 +21,7 @@ trait ChildEndpointFactoryTrait
     public function getId()
     {
         if ($this->id === null){
-            $this->id = $this->getParentEndpointFactory()->getId() . $this->generateId();
+            $this->id = $this->getParentEndpointFactory()->getId() . $this->generateId(); // @phpstan-ignore method.notFound
         }
         return $this->id;
     }
@@ -65,7 +65,7 @@ trait ChildEndpointFactoryTrait
     public function generatePathItem()
     {
         $item = new PathItem();
-        foreach ($this->getOperationFactoryCollection()->getOperationFactories() as $operation){
+        foreach ($this->getOperationFactoryCollection()->getOperationFactories() as $operation){ // @phpstan-ignore method.notFound
             $operationDefinition = $operation->generateOperation();
             $parameters = [];
             foreach ($this->getParentOperationFactory()->generateOperation()->parameters as $parameter){
