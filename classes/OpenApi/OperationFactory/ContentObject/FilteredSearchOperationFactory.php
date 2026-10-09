@@ -7,6 +7,7 @@ use eZObjectRelationType;
 use eZSelectionType;
 use eZTagsType;
 use OCEventType;
+use eZStringType;
 use Opencontent\OpenApi\Exceptions\InternalException;
 use Opencontent\OpenApi\Exceptions\InvalidParameterException;
 use Opencontent\OpenApi\SchemaFactory\ContentClassSchemaFactory;
@@ -69,6 +70,7 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                     }
                     break;
 
+                case eZStringType::DATA_TYPE_STRING:
                 case eZSelectionType::DATA_TYPE_STRING:
                     $value = $this->getCurrentRequestParameter($name);
                     if (!empty($value) && is_string($value)) {
@@ -275,6 +277,18 @@ class FilteredSearchOperationFactory extends SearchOperationFactory
                                                 ],
                                             ],
                                             'queryField' => $identifier . '.remote_id',
+                                            'dataType' => $field['dataType'],
+                                        ];
+                                        break;
+
+                                    case eZStringType::DATA_TYPE_STRING:
+                                        $this->filters[$identifier] = [
+                                            'in' => OA\Parameter::IN_QUERY,
+                                            'description' => sprintf('Filter by %s field (exact match)', $identifier),
+                                            'schema' => [
+                                                'type' => 'string',
+                                            ],
+                                            'queryField' => $identifier,
                                             'dataType' => $field['dataType'],
                                         ];
                                         break;
