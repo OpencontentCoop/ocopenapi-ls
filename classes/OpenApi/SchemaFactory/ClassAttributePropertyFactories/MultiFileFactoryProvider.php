@@ -8,32 +8,64 @@ use Opencontent\Opendata\Api\Values\Content;
 
 class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
 {
+    /**
+     * Proprieta' esposte dall'api => chiavi usate dal convertitore opendata (OCMultiBinaryOpendataConverter),
+     * disponibili solo se l'attributo di classe ha attive le decorazioni (OCMultiBinaryType::ALLOW_DECORATIONS_FIELD)
+     */
+    private const DECORATION_FIELDS = [
+        'display_name' => 'displayName',
+        'display_group' => 'group',
+        'display_text' => 'text',
+    ];
+
     public function provideProperties()
     {
+        $properties = [
+            "filename" => [
+                "title" => 'File name',
+                "type" => "string"
+            ],
+            "file" => [
+                "title" => "Base64-encoded file contents",
+                "type" => "string",
+                "format" => "byte",
+                "writeOnly" => true
+            ],
+            "uri" => [
+                "title" => 'File uri',
+                "type" => "string",
+                "readOnly" => true
+            ],
+        ];
+
+        if ($this->hasDecorations()) {
+            $properties["display_name"] = [
+                "title" => 'Display name',
+                "type" => "string"
+            ];
+            $properties["display_group"] = [
+                "title" => 'Display group',
+                "type" => "string"
+            ];
+            $properties["display_text"] = [
+                "title" => 'Display text',
+                "type" => "string"
+            ];
+        }
+
         return [
             "type" => "array",
             "description" => $this->getPropertyDescription(),
             "items" => [
                 "type" => "object",
-                "properties" => [
-                    "filename" => [
-                        "title" => 'File name',
-                        "type" => "string"
-                    ],
-                    "file" => [
-                        "title" => "Base64-encoded file contents",
-                        "type" => "string",
-                        "format" => "byte",
-                        "writeOnly" => true
-                    ],
-                    "uri" => [
-                        "title" => 'File uri',
-                        "type" => "string",
-                        "readOnly" => true
-                    ],
-                ]
+                "properties" => $properties
             ]
         ];
+    }
+
+    private function hasDecorations(): bool
+    {
+        return (bool)$this->attribute->attribute(\OCMultiBinaryType::ALLOW_DECORATIONS_FIELD);
     }
 
     public function serializeValue(Content $content, $locale)
@@ -43,10 +75,18 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
         if (is_array($content)) {
             foreach ($content as $item) {
                 if (!empty($item['filename'])) {
-                    $data[] = [
+                    $fileData = [
                         'filename' => $item['filename'],
                         'uri' => $item['url'],
                     ];
+                    if ($this->hasDecorations()) {
+                        foreach (self::DECORATION_FIELDS as $apiName => $opendataName) {
+                            if (isset($item[$opendataName]) && $item[$opendataName] !== '') {
+                                $fileData[$apiName] = $item[$opendataName];
+                            }
+                        }
+                    }
+                    $data[] = $fileData;
                 }
             }
         }
@@ -60,10 +100,12 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
             $value = $payload[$this->providePropertyIdentifier()];
             $normalizedValue = [];
             foreach ($value as $item){
+                $decorations = $this->getPayloadDecorations($item);
+                $item = array_diff_key($item, self::DECORATION_FIELDS);
                 if (isset($item['uri'])) {
                     $item = $this->getPayloadFileData($item);
                 }
-                $normalizedValue[] = $item;
+                $normalizedValue[] = $item + $decorations;
             }
             $payloadBuilder->setData(
                 $locale,
@@ -71,6 +113,23 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
                 $normalizedValue
             );
         }
+    }
+
+    /**
+     * Converte le proprieta' di decorazione dell'api nelle chiavi attese dal convertitore opendata
+     */
+    private function getPayloadDecorations(array $item): array
+    {
+        $decorations = [];
+        if ($this->hasDecorations()) {
+            foreach (self::DECORATION_FIELDS as $apiName => $opendataName) {
+                if (isset($item[$apiName])) {
+                    $decorations[$opendataName] = $item[$apiName];
+                }
+            }
+        }
+
+        return $decorations;
     }
 
     private function getPayloadFileData($item)
