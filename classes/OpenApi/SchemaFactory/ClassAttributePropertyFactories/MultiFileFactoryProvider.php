@@ -23,6 +23,7 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
         $properties = [
             "filename" => [
                 "title" => 'File name',
+                "description" => 'The file name is returned URL-encoded as stored (e.g. "a+b+%281%29.pdf"): when sending it again as a new file, send the decoded name; the encoded form is the one to use in the path of the single file endpoints',
                 "type" => "string"
             ],
             "file" => [
@@ -103,7 +104,7 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
                 $decorations = $this->getPayloadDecorations($item);
                 $item = array_diff_key($item, self::DECORATION_FIELDS);
                 if (isset($item['uri'])) {
-                    $item = $this->getPayloadFileData($item);
+                    $item = $this->getStoredFileData($payloadBuilder, $item) ?? $this->getPayloadFileData($item);
                 }
                 $normalizedValue[] = $item + $decorations;
             }
@@ -130,6 +131,63 @@ class MultiFileFactoryProvider extends ContentClassAttributePropertyFactory
         }
 
         return $decorations;
+    }
+
+    /**
+     * Un file gia' presente nel campo dello stesso oggetto viene riagganciato con l'identificatore "stored_"
+     * (come fa la form del portale) invece di essere riscaricato dal suo uri e salvato di nuovo: evita di
+     * ricodificare il nome del file a ogni scrittura (original_filename e' salvato con urlencode()) e un
+     * download per ogni file esistente a ogni scrittura.
+     *
+     * Restituisce null se il file non appartiene a questo campo di questo oggetto (ad esempio un uri esterno
+     * o di un altro campo): in quel caso OCMultiBinaryType::fromString() ignorerebbe l'identificatore.
+     */
+    private function getStoredFileData(PayloadBuilder $payloadBuilder, array $item): ?array
+    {
+        if (!preg_match('#ocmultibinary/download/(\d+)/(\d+)/(\d+)/([^/]+)/file/#', (string)$item['uri'], $matches)) {
+            return null;
+        }
+        [, $objectId, $attributeId, $version, $storedFilename] = $matches;
+
+        $metadata = isset($payloadBuilder['metadata']) ? (array)$payloadBuilder['metadata'] : [];
+        $targetObjectId = null;
+        if (!empty($metadata['id'])) {
+            $targetObjectId = (int)$metadata['id'];
+        } elseif (!empty($metadata['remoteId'])) {
+            $targetObject = \eZContentObject::fetchByRemoteID($metadata['remoteId']);
+            if ($targetObject instanceof \eZContentObject) {
+                $targetObjectId = (int)$targetObject->attribute('id');
+            }
+        }
+        if ($targetObjectId === null || $targetObjectId !== (int)$objectId) {
+            return null;
+        }
+
+        $objectAttribute = \eZContentObjectAttribute::fetch((int)$attributeId, (int)$version);
+        if (!$objectAttribute instanceof \eZContentObjectAttribute
+            || (int)$objectAttribute->attribute('contentobject_id') !== $targetObjectId
+            || (int)$objectAttribute->attribute('contentclassattribute_id') !== (int)$this->attribute->attribute('id')
+        ) {
+            return null;
+        }
+
+        $binaryFile = \eZPersistentObject::fetchObject(
+            \eZMultiBinaryFile::definition(),
+            null,
+            [
+                'contentobject_attribute_id' => (int)$attributeId,
+                'version' => (int)$version,
+                'filename' => urldecode($storedFilename),
+            ]
+        );
+        if (!$binaryFile instanceof \eZMultiBinaryFile) {
+            return null;
+        }
+
+        return [
+            'stored' => \OCMultiBinaryType::generateAlreadyStoredFileId($objectAttribute, $binaryFile),
+            'filename' => $binaryFile->attribute('original_filename'),
+        ];
     }
 
     private function getPayloadFileData($item)
