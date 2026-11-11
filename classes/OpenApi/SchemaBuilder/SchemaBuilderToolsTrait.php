@@ -17,6 +17,19 @@ trait SchemaBuilderToolsTrait
             foreach ($languages as $language) {
                 self::$languageList[$language] = \eZLocale::instance($language)->HTTPLocaleCode;
             }
+
+            // Lingue richiedibili via API anche se non sono nel SiteLanguageList del siteaccess
+            // (es. il tedesco sul siteaccess italiano): solo quelle elencate in ocopenapi.ini [GeneralSettings] ApiLanguageList
+            // e presenti nel sistema. Di default l'elenco e' vuoto e il comportamento non cambia
+            $ini = \eZINI::instance('ocopenapi.ini');
+            if ($ini->hasVariable('GeneralSettings', 'ApiLanguageList')) {
+                foreach ((array)$ini->variable('GeneralSettings', 'ApiLanguageList') as $language) {
+                    if ($language !== '' && !isset(self::$languageList[$language])
+                        && \eZContentLanguage::fetchByLocale($language)) {
+                        self::$languageList[$language] = \eZLocale::instance($language)->HTTPLocaleCode;
+                    }
+                }
+            }
         }
 
         return self::$languageList;
