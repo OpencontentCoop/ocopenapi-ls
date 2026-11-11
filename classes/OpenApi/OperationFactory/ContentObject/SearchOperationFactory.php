@@ -99,8 +99,12 @@ class SearchOperationFactory extends OperationFactory\SearchOperationFactory imp
             'limit' => 0,
         ];
         foreach ($this->generateSearchParameters() as $parameter) {
-            if ($this->getCurrentRequestParameter($parameter->name)) {
-                $parameters[$parameter->name] = $this->getCurrentRequestParameter($parameter->name);
+            // i parametri array sono dichiarati con il suffisso [] (es. document_type[])
+            // ma in $_GET la chiave non lo contiene
+            $name = str_replace('[]', '', $parameter->name);
+            $value = $this->getCurrentRequestParameter($name);
+            if ($value) {
+                $parameters[$name] = $value;
             }
         }
 

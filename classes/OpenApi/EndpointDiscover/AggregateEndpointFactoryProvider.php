@@ -28,6 +28,8 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
      * node: url alias del nodo radice del sottoalbero
      * remote_id: (opzionale) remote id dell'oggetto radice, ha la precedenza sull'url alias
      *            e rende la rotta indipendente da eventuali alias diversi tra i tenant
+     * root: (opzionale) se true la radice è il nodo radice dell'intero albero dei contenuti
+     *       (content.ini [NodeSettings] RootNode), ha la precedenza su node e remote_id
      * classes: identificatori delle classi da includere
      */
     const DEFINITIONS = [
@@ -45,6 +47,12 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
             'path' => '/amministrazione/documenti-e-dati',
             'node' => 'amministrazione/documenti-e-dati',
             'remote_id' => 'cb945b1cdaad4412faaa3a64f7cdd065',
+            'classes' => ['document'],
+        ],
+        [
+            'path' => '/documenti',
+            'node' => '',
+            'root' => true,
             'classes' => ['document'],
         ],
     ];
@@ -119,6 +127,13 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
      */
     private function fetchRootNode(array $definition)
     {
+        if (!empty($definition['root'])) {
+            $rootNodeId = (int)\eZINI::instance('content.ini')->variable('NodeSettings', 'RootNode');
+            $node = eZContentObjectTreeNode::fetch($rootNodeId);
+
+            return $node instanceof eZContentObjectTreeNode ? $node : null;
+        }
+
         if (!empty($definition['remote_id'])) {
             $object = eZContentObject::fetchByRemoteID($definition['remote_id']);
             if ($object instanceof eZContentObject) {

@@ -27,6 +27,15 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
     const DISCRIMINATED_SCHEMA_PREFIX = 'Typed';
 
     /**
+     * Se true (SearchMainLanguageOnly=enabled nell'ezfind.ini del siteaccess, letto prima che l'API lo forzi a disabled)
+     * in un sito con un core Solr per lingua la ricerca interroga solo il core della lingua richiesta
+     * (e non quello della lingua del siteaccess, né tutti i core)
+     *
+     * @var bool
+     */
+    public static $searchInRequestLanguageCoreOnly = false;
+
+    /**
      * @var bool
      */
     protected $debug = true;
@@ -68,6 +77,16 @@ class OpenApiEnvironmentSettings extends EnvironmentSettings
             throw new InvalidParameterException("language", $this->language);
         }
         parent::__construct();
+    }
+
+    /**
+     * Usato da Opencontent\Opendata\Api\QueryLanguage\EzFind\SearchGateway
+     *
+     * @return string|null codice lingua (es. ger-DE) del core in cui cercare, null per cercare in tutti i core
+     */
+    public function getSolrSearchLanguage()
+    {
+        return self::$searchInRequestLanguageCoreOnly ? $this->language : null;
     }
 
     /**

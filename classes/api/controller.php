@@ -40,6 +40,10 @@ class OpenApiController extends ezpRestMvcController
         eZDB::setErrorHandling(eZDB::ERROR_HANDLING_EXCEPTIONS);
 
         eZINI::instance('ezfind.ini')->removeSetting('SearchFilters', 'RawFilterList');
+        // le API cercano in tutte le lingue: eZ Find deve inviare l'elenco degli shard. Il valore configurato
+        // si conserva, perche' con enabled (un core per lingua) la ricerca va solo nel core della lingua richiesta
+        OpenApiEnvironmentSettings::$searchInRequestLanguageCoreOnly =
+            eZINI::instance('ezfind.ini')->variable('LanguageSearch', 'SearchMainLanguageOnly') == 'enabled';
         eZINI::instance('ezfind.ini')->setVariable('LanguageSearch', 'SearchMainLanguageOnly', 'disabled');
         eZINI::instance()->setVariable('RegionalSettings', 'ShowUntranslatedObjects', 'enabled');
     }
