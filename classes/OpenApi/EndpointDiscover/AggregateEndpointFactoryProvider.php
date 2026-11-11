@@ -3,6 +3,7 @@
 namespace Opencontent\OpenApi\EndpointDiscover;
 
 use eZContentClass;
+use eZContentObject;
 use eZContentObjectTreeNode;
 use Opencontent\OpenApi\EndpointFactory;
 use Opencontent\OpenApi\EndpointFactoryCollection;
@@ -25,6 +26,8 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
     /**
      * path: percorso dell'endpoint
      * node: url alias del nodo radice del sottoalbero
+     * remote_id: (opzionale) remote id dell'oggetto radice, ha la precedenza sull'url alias
+     *            e rende la rotta indipendente da eventuali alias diversi tra i tenant
      * classes: identificatori delle classi da includere
      */
     const DEFINITIONS = [
@@ -37,6 +40,12 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
             'path' => '/novita/avvisi-notizie-comunicati',
             'node' => 'novita',
             'classes' => ['article'],
+        ],
+        [
+            'path' => '/amministrazione/documenti-e-dati',
+            'node' => 'amministrazione/documenti-e-dati',
+            'remote_id' => 'cb945b1cdaad4412faaa3a64f7cdd065',
+            'classes' => ['document'],
         ],
     ];
 
@@ -59,7 +68,7 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
 
     private function appendEndpoints(array $definition)
     {
-        $node = eZContentObjectTreeNode::fetchByURLPath($definition['node']);
+        $node = $this->fetchRootNode($definition);
         if (!$node instanceof eZContentObjectTreeNode) {
             $this->log('Node not found for aggregate endpoint ' . $definition['path'], 'error');
 
@@ -103,5 +112,25 @@ class AggregateEndpointFactoryProvider extends EndpointFactoryProvider
                     new OperationFactory\ContentObject\ReadOperationFactory(),
                 ])
             );
+    }
+
+    /**
+     * @return eZContentObjectTreeNode|null
+     */
+    private function fetchRootNode(array $definition)
+    {
+        if (!empty($definition['remote_id'])) {
+            $object = eZContentObject::fetchByRemoteID($definition['remote_id']);
+            if ($object instanceof eZContentObject) {
+                $node = $object->mainNode();
+                if ($node instanceof eZContentObjectTreeNode) {
+                    return $node;
+                }
+            }
+        }
+
+        $node = eZContentObjectTreeNode::fetchByURLPath($definition['node']);
+
+        return $node instanceof eZContentObjectTreeNode ? $node : null;
     }
 }
